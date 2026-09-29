@@ -35,3 +35,15 @@ export async function createChoice(form: FormData) {
   const { error } = await db.from("story_choices").insert({ story_id: storyId, node_id: nodeId, next_node_id: nextNodeId, label });
   if (error) throw new Error(error.message); revalidatePath(`/admin/stories/${slug}`);
 }
+
+export async function beginChapterImages(form: FormData) {
+  const { db } = await requireStaff();
+  const nodeId = required(form, "node_id", 40);
+  const slug = required(form, "slug");
+  const { data: node } = await db.from("story_nodes").select("story_id,stories!inner(slug)").eq("id", nodeId).single();
+  if (!node || (node.stories as unknown as { slug: string }).slug !== slug) throw new Error("Chapter tidak ditemukan");
+  const { error } = await db.rpc("begin_chapter_image_draft", { p_node_id: nodeId });
+  if (error) throw new Error(error.message);
+  revalidatePath(`/admin/stories/${slug}/chapters/${nodeId}`);
+  redirect(`/admin/stories/${slug}/chapters/${nodeId}`);
+}

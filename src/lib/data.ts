@@ -48,3 +48,16 @@ export function assetUrl(asset: Asset): string | null {
     return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/story-public/${asset.storage_path.split("/").map(encodeURIComponent).join("/")}`;
   return null;
 }
+
+export async function getPublishedChapterImages(nodeId: string) {
+  const db = await createClient();
+  const { data: set, error: setError } = await db.from("chapter_image_sets").select("id").eq("node_id", nodeId).eq("status", "published").maybeSingle();
+  if (setError) throw setError;
+  if (!set) return null;
+  const { data: images, error } = await db.from("chapter_images").select("id,position,storage_path,alt_text,caption,dialogue,speaker,width,height").eq("set_id", set.id).order("position");
+  if (error) throw error;
+  return Promise.all((images ?? []).map(async image => {
+    const { data } = await db.storage.from("story-private").createSignedUrl(image.storage_path, 3600);
+    return { ...image, url: data?.signedUrl ?? null };
+  }));
+}

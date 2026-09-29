@@ -14,3 +14,5 @@ Platform komik bercabang berbasis Next.js dan Supabase. Repo ini sedang dikonver
 Skema awal hanya memberi staff izin membuat konten draft. Publikasi seed dilakukan oleh migrasi/SQL admin. Jangan memberi editor akses update status langsung dari browser. Pembaca menggunakan RPC `start_story` dan `apply_story_choice` untuk progres. Admin pertama dipromosikan dengan SQL setelah akun emailnya terverifikasi.
 
 Rencana lengkap: [CONVERSION_INSTRUCTIONS.md](CONVERSION_INSTRUCTIONS.md). Status implementasi dan kekurangan: [docs/implementation-status.md](docs/implementation-status.md). Dokumen plan asli ada di `docs/reference/`.
+
+Instruksi pekerjaan berikutnya untuk GPT-6 Sol: [gambar per chapter di Studio](docs/studio-image-instructions.md), mencakup upload manual, generate AI, urutan gambar, preview, review/publish, dan deployment.
