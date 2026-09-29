@@ -1,36 +1,16 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pixinia
 
-## Getting Started
+Platform komik bercabang berbasis Next.js dan Supabase. Repo ini sedang dikonversi dari situs company profile. Implementasi saat ini mencakup katalog, cerita contoh delapan node, reader pilihan, Auth, progres, dan form dasar untuk membuat cerita/node/choice draft. Produksi AI, motion comic, entitlement premium, pembayaran, dan publikasi editorial masih perlu diselesaikan sebelum aplikasi memenuhi seluruh plan.
 
-First, run the development server:
+## Setup lokal
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1. Gunakan Node.js yang kompatibel dengan Next.js 15.5 dan pnpm. Jalankan `pnpm install`.
+2. Salin `.env.example` ke `.env.local` dan isi URL serta publishable key proyek Supabase development. Jangan commit `.env.local`.
+3. Terapkan migrasi dalam `supabase/migrations/` berurutan pada proyek development, lalu jalankan `supabase/seed.sql`.
+4. Konfigurasikan redirect Auth Supabase untuk URL lokal, preview, dan production.
+5. Jalankan `pnpm dev`; buka `http://localhost:3000`.
+6. Jalankan `pnpm typecheck`, `pnpm lint`, dan `pnpm build` sebelum deploy.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Skema awal hanya memberi staff izin membuat konten draft. Publikasi seed dilakukan oleh migrasi/SQL admin. Jangan memberi editor akses update status langsung dari browser. Pembaca menggunakan RPC `start_story` dan `apply_story_choice` untuk progres. Admin pertama dipromosikan dengan SQL setelah akun emailnya terverifikasi.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Rencana lengkap: [CONVERSION_INSTRUCTIONS.md](CONVERSION_INSTRUCTIONS.md). Status implementasi dan kekurangan: [docs/implementation-status.md](docs/implementation-status.md). Dokumen plan asli ada di `docs/reference/`.

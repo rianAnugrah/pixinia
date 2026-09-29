@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500" role="img" aria-label="Fajar Baru">
+<defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#7c514d"/><stop offset="1" stop-color="#f5cc86"/></linearGradient></defs>
+<rect width="900" height="500" fill="url(#sky)"/>
+<circle cx="650" cy="150" r="85" fill="#ffe2a9" opacity=".72"/>
+<path d="M0 380 L110 320 190 365 270 285 350 340 440 255 530 335 640 270 730 350 810 285 900 345 V500 H0Z" fill="#171724" opacity=".72"/>
+<path d="M0 425 L130 370 270 420 390 350 510 410 630 365 740 420 900 350 V500 H0Z" fill="#100e17" opacity=".75"/>
+<text x="55" y="78" fill="#fff3df" font-family="Arial,sans-serif" font-size="27" font-weight="bold">ARSIP SENJA</text>
+<text x="55" y="450" fill="#fff3df" font-family="Arial,sans-serif" font-size="48" font-weight="bold">Fajar Baru</text>
+<text x="760" y="92" fill="#fff3df" font-family="Arial,sans-serif" font-size="56">☼</text>
+</svg>
