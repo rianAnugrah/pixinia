@@ -1,30 +1,39 @@
 # Status implementasi Pixinia
 
-Tanggal: 29 September 2026.
+Tanggal: 30 September 2026.
 
-## Sudah dibuat
+## Upgrade Studio Graph (development)
 
-- Dua project Supabase pada organisasi Pixinia, region Singapore:
-  - development: `avvkbocpqkquzbsvaoeb`
-  - production: `etdjnilavmdugyzufmex`
-- Migrasi development: `initial_schema`, `function_privileges`, `editorial_guards`.
-- Seed development `Arsip Senja`: 8 node, 10 pilihan, 2 ending, 8 panel ilustrasi SVG orisinal.
-- Next.js 15.5.26, React 19.3.0, SSR Supabase, katalog, halaman cerita, reader, Auth, pustaka, akun, dan studio dasar untuk draft.
-- Existing Vercel project `pixinia-web-id` telah ditemukan. Environment Production menunjuk proyek Supabase production; Preview dan Development menunjuk development.
-- Build produksi dan typecheck lulus. Smoke test lokal `/`, `/stories/arsip-senja`, dan `/read/arsip-senja/jam-keenam` mengembalikan HTTP 200 dan konten seed.
-- Deployment preview berhasil: https://pixinia-web-dl3fq3qya-riananugrahs-projects.vercel.app. Smoke test katalog melalui Vercel CLI berhasil; pengujian browser Auth/Studio lengkap belum dilakukan.
-- Redirect Auth development untuk localhost dan preview tersebut sudah disimpan. SMTP belum diverifikasi.
-- Pengguna mengonfirmasi akun admin `asnara.dev@gmail.com` sudah tersedia. Keberadaan/role perlu diverifikasi kembali pada environment target, terutama production.
+### Panel Editing di inspector
 
-## Belum selesai / belum terverifikasi
+Tab **Panel Editing** pada node kini menampilkan gambar draft berurutan vertikal, dengan tombol naik, edit teks, detail, hapus, dan turun pada tiap gambar. Kartu tambah gambar berada di bawah; pemilihan beberapa file langsung memulai upload dan alt text otomatis memakai nama file (fallback ID). Form AI baru muncul setelah tombol Generate with AI dipilih. Alur upload/generate/publikasi yang ada tetap dipakai, dan data panel dimuat ulang dari server sesudah mutasi. Tab **Preview** memuat halaman pratinjau draft secara vertikal dalam inspector, dengan tautan ke preview penuh dan reader terbit. Ketiga tampilan panel (editor, Preview, reader) memakai `ReaderPanelStack`, sehingga urutan, gambar dan metadata dirender dengan aturan yang sama. Perbedaan draft dan versi terbit tetap ditandai karena pembaca belum melihat perubahan sebelum publikasi.
 
-- Pengujian end-to-end signup/login/progres dan Studio dengan pengguna nyata.
-- Konfigurasi Auth redirect/SMTP untuk URL deploy akhir.
-- CRUD lengkap, upload media, graph validation, review, publish/unpublish terkontrol.
-- Pipeline AI, provider gambar, render motion comic, pembatasan biaya, entitlement, pembayaran.
-- Migrasi dan seed production, verifikasi RLS lintas peran, backup/recovery.
-- Status push branch terbaru, deployment production, dan smoke test alur lengkap pada URL Vercel.
+Tidak ada migrasi baru untuk perubahan ini. Uji browser Preview memastikan tab baru, form upload/AI dan loading tampil pada node nyata; pengujian unggah file melalui browser masih dilewati sesuai instruksi pengguna, dan request AI berbayar tidak dijalankan.
 
-Fokus pekerjaan berikutnya sesuai permintaan pengguna: [gambar per chapter di Studio](studio-image-instructions.md), melalui upload manual dan generate AI. Dokumen instruksi sudah dibuat; fitur tersebut belum diimplementasikan.
+Workspace cerita kini memakai canvas React Flow, tata letak Dagre, inspector node/pilihan, episode, Scenes, pustaka media dan pintasan editor panel/AI. Draft graph disimpan dalam tabel privat dengan RLS staff-only, versi optimistis dan mutation ID idempoten. Publikasi admin memvalidasi start, keterjangkauan, ending, siklus, urutan pilihan dan media sebelum memproyeksikan graph secara atomik ke tabel reader lama. ID node dan progress pembaca tetap dipertahankan. Preview panel draft staff-only tersedia melalui Studio.
 
-Peringatan: status ini bukan klaim bahwa seluruh plan sudah terpenuhi. Production domain `pixinia.web.id` masih melayani situs lama sampai deployment baru lolos uji dan dipromosikan.
+Migrasi development: `20260930024814_studio_graph_workspace.sql`, `20260930025846_studio_graph_guards.sql`, `20260930031133_studio_graph_publish_validation.sql`, dan `20260930031551_studio_graph_idempotency.sql`. Uji transaksi database memeriksa save, publish rollback, RLS anonim, stale version dan retry dengan mutation ID yang sama. Uji browser memeriksa graph nyata, pemilihan node, serta bahwa perubahan draft tidak langsung mengubah judul reader. Unit validator: `pnpm test` (4 lulus). Production belum menerima migrasi graph ini; rilis Studio saat ini hanya Preview.
+
+Build Preview Studio sebelumnya `dpl_GrghFEXwgMXoPrDdA52yxYinjwGU` (`pixinia-web-k6vyi2ndw-riananugrahs-projects.vercel.app`) berstatus READY saat diverifikasi. Browser yang login sebagai admin memuat graph dan Panel Editing sederhana. Gambar pada Preview dan reader gapless: margin, border, dan sudut kartu dihilangkan, sementara kartu edit tetap terpisah. Pengukuran browser pada tiga gambar draft menunjukkan batas bawah gambar tepat sama dengan batas atas gambar berikutnya (selisih 0 px). Build lokal/remote lulus; pengujian unggah file melalui browser tetap dilewati sesuai instruksi pengguna. Pada rilis Reader berikutnya, alias Preview dipindah ke build baru; lihat catatan di bawah.
+
+Upgrade Reader mobile dirilis ke Preview dalam deployment `dpl_FiR3deFc9m91dzC7tMwAZZtE6bmd` (`pixinia-web-maa22vg4f-riananugrahs-projects.vercel.app`) dan menjadi target `preview.pixinia.web.id`. Build remote READY; beranda, detail cerita, reader dan kontrol navigasi diuji melalui `vercel curl` dengan akses terautentikasi pada build baru dan alias. Browser anonim menerima login Vercel sesuai proteksi Preview. Lihat [status reader](reader-mobile-status.md) untuk cakupan, bukti browser lokal dan batas verifikasi. Production tetap pada deployment sebelumnya.
+
+Batas verifikasi: uji pemilih file di browser dilewati sesuai permintaan pengguna; request AI berbayar tidak dijalankan. Rangkaian end-to-end publikasi cabang baru, pengujian 100 node, dan audit aksesibilitas lintas ukuran layar belum selesai. Menu Characters, Translations dan Analytics tetap backlog. Jangan menafsirkan status ini sebagai pemenuhan seluruh checkbox [TODO Studio Graph](studio-graph-todo.md).
+
+Production aktif di https://www.pixinia.web.id; `https://pixinia.web.id` mengalihkan ke alamat tersebut. Seluruh delapan migrasi telah diterapkan pada Supabase production `etdjnilavmdugyzufmex`, lalu seed `Arsip Senja` ditambahkan: satu cerita, delapan chapter, sepuluh pilihan, dan delapan aset. Katalog, halaman cerita, reader, dan login memuat konten pada domain production. Lima deployment Preview lama di project `pixinia-web-id` dihapus.
+
+Satu Preview development aktif di https://preview.pixinia.web.id. Subdomain ini memakai A record Hostinger ke Vercel dan alias diarahkan ke deployment Preview terbaru. Supabase development memakai alamat tersebut sebagai Site URL dan mengizinkan redirect Auth-nya; redirect Preview lama telah dihapus. Pembaruan berikutnya perlu mengalihkan alias tetap ke build baru dan menghapus deployment Preview lama agar hanya satu yang aktif.
+
+Perbaikan UX loading telah ditambahkan untuk perpindahan halaman, pemuatan gambar, Auth, reader, formulir Studio, upload, mutasi gambar, dan status job AI. Typecheck, lint, dan build lulus; lint menyisakan satu peringatan penggunaan `<img>` pada komponen gambar yang menampilkan indikator load/error. Browser memverifikasi indikator perpindahan halaman dan pemuatan halaman; katalog Preview memuat cerita melalui alamat tetap.
+
+Studio gambar per chapter mendukung upload manual, urutan dan teks gambar, revisi draft, serta generate AI melalui kie.ai atau OpenRouter. Model kie.ai adalah `gpt-image-2-text-to-image` dengan resolusi 1K dan polling status; `KIE_API_KEY` tersedia di Vercel Production. Anggaran awal database untuk AI adalah US$2. `pnpm typecheck`, `pnpm lint`, dan `pnpm build` lulus sebelum deploy; lint memiliki tiga peringatan `<img>`.
+
+Alur upload dan generasi berbayar sampai publikasi belum diverifikasi di browser. Pengguna meminta melewati uji upload browser sebelumnya. Supabase production belum memiliki akun Auth, sehingga admin `asnara.dev@gmail.com` yang ada di development belum dapat masuk sebagai admin di production. Akun tersebut perlu dibuat atau diundang di Supabase production, lalu diberi peran `admin` secara aman. Jangan menyalin hash password atau token dari development.
+
+Sistem coin telah diterapkan di development dan Preview (`dpl_6JubAwsi4MALo6VpauUCM1PkMtRT`): wallet awal 100, default unlock node 5, reset gratis, unlock permanen, pembelian komik premium, redeem reward dan pemberian manual admin. Pengelolaan tersedia pada `/admin/coins`. Alias `preview.pixinia.web.id` diarahkan ke build ini; HTTP reader 200 dan gate coin diverifikasi. Endpoint aset tanpa ownership dan jalur demo SVG publik lama keduanya 404 pada build baru. Migrasi dan batas verifikasi tercatat di [sistem coin](coin-system.md); uji SQL authenticated rollback lulus, uji browser authenticated menunggu izin akun uji. Production belum diperbarui.
+
+Perbaikan navigasi reader dirilis ke Preview dalam `dpl_4BACVSBE4aTMu7rvRGN9dkWKf5xh` (`pixinia-web-oukvozqem-riananugrahs-projects.vercel.app`), target terbaru `preview.pixinia.web.id`. Loading pilihan sebelumnya tidak lagi terbawa ke bab berikutnya atau reset pada bab yang sama: state pilihan memiliki key berdasarkan story/node/updated_at progres. Dua tes komponen mereproduksi kegagalan sebelum perubahan dan lulus setelahnya; total delapan tes, typecheck, lint dan build remote lulus. Reader alias mendapat HTTP 200; bundle reader pada alias memuat progressVersion dan key state baru. Kontrol panel di-remount per node. Tidak ada perubahan database, harga coin atau deployment Production.
+
+### Reader navigation and coin UX (1 October 2026)
+
+Reader now provides published branch maps, chapter lists and read history; explicit unlock confirmation with wallet totals; insufficient-balance handling; free reset/path activation; and keyed pending state across chapter/progress changes. Preview: https://preview.pixinia.web.id (`dpl_3juUR7aPjCRNLcwCzoCpZMmWCVi5`). Build/typecheck and 13 tests passed. Authenticated browser end-to-end transactions remain unverified; SQL transaction regression passed. See reader-mobile-status.md for verification scope.

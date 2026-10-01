@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { requireStaff } from "@/lib/admin";
 import { beginChapterImages } from "@/app/admin/actions";
 import ChapterImageEditor from "@/components/chapter-image-editor";
+import SubmitButton from "@/components/submit-button";
 
 export default async function ChapterImagesPage({ params }: { params: Promise<{ slug: string; nodeId: string }> }) {
   const { slug, nodeId } = await params;
@@ -23,8 +24,8 @@ export default async function ChapterImagesPage({ params }: { params: Promise<{ 
   return <main className="shell page">
     <Link className="text-link" href={`/admin/stories/${slug}`}>← Kembali ke cerita</Link>
     <div className="page-intro"><p className="eyebrow">STUDIO / CHAPTER</p><h1 className="page-title">{node.title}</h1><p>{story.title} · {node.node_key}</p></div>
-    {!draft && <form action={beginChapterImages} className="panel"><p>{published ? "Versi terbit tetap tampil saat Anda menyiapkan revisi." : "Buat draft untuk menambahkan gambar."}</p><input type="hidden" name="slug" value={slug} /><input type="hidden" name="node_id" value={node.id} /><button className="primary-button">Mulai edit gambar</button></form>}
+    {!draft && <form action={beginChapterImages} className="panel"><p>{published ? "Versi terbit tetap tampil saat Anda menyiapkan revisi." : "Buat draft untuk menambahkan gambar."}</p><input type="hidden" name="slug" value={slug} /><input type="hidden" name="node_id" value={node.id} /><SubmitButton pendingLabel="Menyiapkan draft…">Mulai edit gambar</SubmitButton></form>}
     {active && <ChapterImageEditor setId={active.id} version={active.version} editable={!!draft} admin={role === "admin"} images={images}
-      providers={{ openrouter: !!process.env.OPENROUTER_API_KEY, kie: !!process.env.KIE_API_KEY && !!process.env.KIE_RESULT_HOSTS }} />}
+      providers={{ openrouter: !!process.env.OPENROUTER_API_KEY, kie: !!process.env.KIE_API_KEY }} />}
   </main>;
 }

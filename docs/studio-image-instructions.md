@@ -10,8 +10,8 @@ Chapter dalam aplikasi ini adalah `story_nodes`. Selesaikan alur Studio → gamb
 
 - Repo: `K:\GIT\pixinia`, Next.js App Router, TypeScript, pnpm. Periksa `git status`, instruksi repo, package scripts, dan perubahan terbaru sebelum mengedit. Pertahankan pekerjaan pengguna.
 - Supabase development: `avvkbocpqkquzbsvaoeb`; production: `etdjnilavmdugyzufmex`.
-- Vercel project: `pixinia-web-id`. Preview yang sudah berhasil dibangun: `https://pixinia-web-dl3fq3qya-riananugrahs-projects.vercel.app`.
-- Preview/Development memakai Supabase development; Production dikonfigurasi memakai Supabase production. Migrasi dan seed terakhir baru diverifikasi di development. Jangan menganggap production sudah siap.
+- Vercel project: `pixinia-web-id`. Production aktif di `https://www.pixinia.web.id`; satu Preview development aktif di alamat tetap `https://preview.pixinia.web.id`.
+- Preview/Development memakai Supabase development; Production memakai Supabase production. Migrasi dan seed telah diterapkan di kedua project. Akun admin production dan alur Studio end-to-end masih perlu diverifikasi.
 - Admin di atas dikonfirmasi pengguna tersedia; periksa keberadaan dan role di environment target tanpa mengubah kredensial.
 - Baca `src/app/admin/actions.ts`, `src/app/admin/stories/[slug]/page.tsx`, `src/lib/admin.ts`, `src/lib/data.ts`, halaman reader, seluruh `supabase/migrations/`, dan `supabase/seed.sql`.
 - Gunakan skill Supabase serta skill Vercel yang relevan. Verifikasi dokumentasi resmi provider sebelum mengimplementasikan API yang dapat berubah.

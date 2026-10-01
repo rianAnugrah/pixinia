@@ -80,20 +80,34 @@ export async function GET(request: NextRequest) {
   const { data: set } = await db.from("chapter_image_sets").select("id,node_id").eq("id", setId).maybeSingle();
   if (!set) return NextResponse.json({ error: "Draft tidak ditemukan" }, { status: 404 });
   const { data: jobs } = await db.from("chapter_image_generation_jobs")
-    .select("id,provider,status,provider_task_id,created_at,last_error")
+    .select("id,provider,status,provider_task_id,created_at,updated_at,last_error")
     .eq("set_id", setId).eq("requested_by", user.id).order("created_at", { ascending: false }).limit(10);
-  const pending = jobs?.find(job => job.provider === "kie" && job.status === "processing" && job.provider_task_id);
+  for (const job of jobs ?? []) {
+    const staleMs = Date.now() - new Date(job.updated_at).getTime();
+    if ((["running", "finalizing"].includes(job.status) && staleMs > 2 * 60_000) ||
+        (job.status === "processing" && staleMs > 15 * 60_000)) {
+      await db.rpc("set_chapter_image_job_state", { p_job_id: job.id, p_status: "uncertain", p_error: "Tugas melewati batas waktu; periksa provider sebelum membuat tugas baru" });
+    }
+  }
+  const pending = jobs?.find(job => job.provider === "kie" && job.status === "processing" && job.provider_task_id
+    && Date.now() - new Date(job.updated_at).getTime() <= 15 * 60_000);
   if (pending && process.env.KIE_API_KEY) {
     try {
       const result = await pollKie(pending.provider_task_id);
       if (result.state === "failed") {
         await db.rpc("set_chapter_image_job_state", { p_job_id: pending.id, p_status: "failed", p_error: "Generasi gagal di kie.ai" });
       } else if (result.state === "success" && result.url) {
+        const { error: claimError } = await db.rpc("set_chapter_image_job_state", { p_job_id: pending.id, p_status: "finalizing" });
+        if (claimError) throw new Error("Tugas sedang disimpan oleh proses lain");
         const bytes = await downloadKieResult(result.url);
         await saveResult(db, user.id, set.node_id, pending.id, bytes, null);
       }
     } catch {
-      // Leave the job processing so the admin can retry polling without charging again.
+      // Keep the provider task record; never submit a second paid request automatically.
+      const { data: current } = await db.from("chapter_image_generation_jobs").select("status").eq("id", pending.id).single();
+      if (current?.status === "finalizing") await db.rpc("set_chapter_image_job_state", {
+        p_job_id: pending.id, p_status: "uncertain", p_error: "Hasil kie.ai belum tersimpan; periksa host hasil dan Storage",
+      });
     }
   }
   const { data: latest } = await db.from("chapter_image_generation_jobs")

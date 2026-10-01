@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireStaff } from "@/lib/admin";
+import { parseStoryTaxonomy } from "@/lib/story-taxonomy";
 
 function required(form: FormData, name: string, max = 200) {
   const value = String(form.get(name) || "").trim();
@@ -14,8 +15,20 @@ export async function createStory(form: FormData) {
   const { db, user } = await requireStaff();
   const title = required(form, "title"); const slug = required(form, "slug").toLowerCase();
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) throw new Error("Slug harus huruf kecil, angka, atau tanda hubung");
-  const { error } = await db.from("stories").insert({ title, slug, description: String(form.get("description") || "").slice(0, 3000), created_by: user.id });
+  const format = form.get("default_format") === "web_novel" ? "web_novel" : "comic";
+  const taxonomy = parseStoryTaxonomy(form);
+  const { error } = await db.from("stories").insert({ title, slug, default_format: format, description: String(form.get("description") || "").slice(0, 3000), ...taxonomy, created_by: user.id });
   if (error) throw new Error(error.message); revalidatePath("/admin"); redirect(`/admin/stories/${slug}`);
+}
+
+export async function updateStoryTaxonomy(form: FormData) {
+  const { db } = await requireStaff();
+  const storyId = required(form, "story_id", 40);
+  const slug = required(form, "slug");
+  const taxonomy = parseStoryTaxonomy(form);
+  const { data, error } = await db.from("stories").update(taxonomy).eq("id", storyId).eq("slug", slug).select("id").single();
+  if (error || !data) throw new Error(error?.message ?? "Cerita tidak ditemukan.");
+  revalidatePath("/"); revalidatePath(`/stories/${slug}`); revalidatePath(`/admin/stories/${slug}`);
 }
 
 export async function createNode(form: FormData) {

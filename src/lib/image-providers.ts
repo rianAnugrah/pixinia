@@ -26,7 +26,7 @@ export async function submitToKie(prompt: string, aspectRatio: string): Promise<
   if (!key) throw new Error("kie.ai belum dikonfigurasi");
   const response = await fetch("https://api.kie.ai/api/v1/jobs/createTask", {
     method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "flux1-kontext", input: { prompt, aspect_ratio: aspectRatio, output_format: "png" } }),
+    body: JSON.stringify({ model: "gpt-image-2-text-to-image", input: { prompt, aspect_ratio: aspectRatio, resolution: "1K" } }),
     signal: AbortSignal.timeout(20_000), cache: "no-store",
   });
   if (!response.ok) throw new Error(`kie.ai HTTP ${response.status}`);
@@ -55,7 +55,8 @@ export async function pollKie(taskId: string): Promise<{ state: "processing" | "
 
 export async function downloadKieResult(value: string): Promise<Buffer> {
   const url = new URL(value);
-  const allowed = (process.env.KIE_RESULT_HOSTS || "").split(",").map(host => host.trim().toLowerCase()).filter(Boolean);
+  const allowed = ["tempfile.aiquickdraw.com", ...(process.env.KIE_RESULT_HOSTS || "").split(",")]
+    .map(host => host.trim().toLowerCase()).filter(Boolean);
   if (url.protocol !== "https:" || url.port || !allowed.includes(url.hostname.toLowerCase()))
     throw new Error("Host hasil kie.ai belum diizinkan");
   const response = await fetch(url, { redirect: "error", signal: AbortSignal.timeout(20_000), cache: "no-store" });

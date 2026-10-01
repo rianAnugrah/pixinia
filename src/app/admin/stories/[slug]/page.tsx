@@ -1,37 +1,53 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireStaff } from "@/lib/admin";
-import { createChoice, createNode } from "@/app/admin/actions";
+import { assetUrl, type Asset } from "@/lib/data";
+import StoryWorkspace from "@/components/studio/story-workspace";
+import Link from "next/link";
+import type { StudioGraph } from "@/lib/studio/graph";
+import { updateStoryTaxonomy } from "@/app/admin/actions";
+import StoryTaxonomyFields from "@/components/admin/story-taxonomy-fields";
+import SubmitButton from "@/components/submit-button";
 
 export default async function AdminStoryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const { db } = await requireStaff();
-  const { data: story } = await db.from("stories").select("id,title,slug,status").eq("slug", slug).maybeSingle();
+  const { db, role } = await requireStaff();
+  const { data: story } = await db.from("stories").select("id,title,slug,status,default_format,genres,tags").eq("slug", slug).maybeSingle();
   if (!story) notFound();
-  const [{ data: nodes }, { data: choices }] = await Promise.all([
-    db.from("story_nodes").select("id,node_key,title,node_type,is_start,status").eq("story_id", story.id).order("created_at"),
-    db.from("story_choices").select("id,node_id,next_node_id,label").eq("story_id", story.id),
+  const { data: draft, error } = await db.rpc("studio_begin_graph", { p_story_id: story.id });
+  if (error || !draft) throw new Error(error?.message ?? "Draft graph tidak dapat dibuka.");
+  const graph = draft.graph as StudioGraph;
+  const nodeIds = graph.nodes.map(node => node.id);
+  const [{ data: sets }, { data: assets }, { data: publicNodes }, { data: prose }] = await Promise.all([
+    nodeIds.length ? db.from("chapter_image_sets").select("id,node_id,status").in("node_id", nodeIds).in("status", ["draft", "published"]) : Promise.resolve({ data: [] }),
+    nodeIds.length ? db.from("story_assets").select("id,node_id,storage_bucket,storage_path,external_provider,external_asset_id,format,asset_type,status").in("node_id", nodeIds).eq("status", "published") : Promise.resolve({ data: [] }),
+    nodeIds.length ? db.from("story_nodes").select("id,status").in("id", nodeIds) : Promise.resolve({ data: [] }),
+    story.default_format === "web_novel" && nodeIds.length ? db.from("story_node_prose_publications").select("node_id").in("node_id", nodeIds) : Promise.resolve({ data: [] }),
   ]);
-  return <main className="shell page">
-    <div className="page-intro"><p className="eyebrow">STUDIO / CERITA</p><h1 className="page-title">{story.title}</h1><p>Status: {story.status}</p></div>
-    <div className="admin-grid">
-      <section className="panel"><h2>Chapter dan pilihan</h2>{nodes?.map(n => <div key={n.id} style={{ borderBottom: "1px solid var(--line)", padding: "12px 0" }}>
-        <strong>{n.title}</strong> <span className="pill">{n.node_key}</span>{n.is_start && <span className="pill">awal</span>}{n.node_type === "ending" && <span className="pill">akhir</span>}
-        <p className="muted">{choices?.filter(c => c.node_id === n.id).map(c => `${c.label} → ${nodes.find(t => t.id === c.next_node_id)?.title || "?"}`).join(" · ") || "Belum ada pilihan"}</p>
-        <Link className="text-link" href={`/admin/stories/${slug}/chapters/${n.id}`}>Kelola gambar →</Link>
-      </div>)}</section>
-      <form action={createNode} className="panel"><h2>Tambah chapter</h2><input type="hidden" name="story_id" value={story.id} /><input type="hidden" name="slug" value={slug} />
-        <label className="field"><span>Kunci chapter</span><input name="node_key" required /></label>
-        <label className="field"><span>Judul</span><input name="title" required /></label>
-        <label className="field"><span>Ringkasan</span><textarea name="synopsis" rows={4} /></label>
-        <label className="field"><span>Jenis</span><select name="node_type"><option value="episode">Episode</option><option value="ending">Ending</option></select></label>
-        <label><input type="checkbox" name="is_start" /> Chapter awal</label><p><button className="primary-button">Tambah chapter</button></p>
-      </form>
-    </div>
-    {(nodes?.length || 0) > 1 && <form action={createChoice} className="panel" style={{ marginTop: 20 }}><h2>Tambah pilihan</h2><input type="hidden" name="story_id" value={story.id} /><input type="hidden" name="slug" value={slug} />
-      <div className="admin-grid"><label className="field"><span>Dari</span><select name="node_id">{nodes?.map(n => <option key={n.id} value={n.id}>{n.title}</option>)}</select></label>
-        <label className="field"><span>Ke</span><select name="next_node_id">{nodes?.map(n => <option key={n.id} value={n.id}>{n.title}</option>)}</select></label></div>
-      <label className="field"><span>Teks pilihan</span><input name="label" required /></label><button className="primary-button">Tambah pilihan</button>
-    </form>}
-  </main>;
+  const thumbnails: Record<string, string> = {};
+  const counts: Record<string, number> = {};
+  const publishedMedia = new Set<string>();
+  if (story.default_format === "web_novel") for (const item of prose ?? []) publishedMedia.add(item.node_id);
+  for (const asset of assets ?? []) {
+    publishedMedia.add(asset.node_id);
+    counts[asset.node_id] = (counts[asset.node_id] ?? 0) + 1;
+    thumbnails[asset.node_id] ??= assetUrl(asset as Asset) ?? "";
+  }
+  const setIds = (sets ?? []).map(set => set.id);
+  if (setIds.length) {
+    const { data: images } = await db.from("chapter_images").select("set_id,position,storage_path").in("set_id", setIds).order("position");
+    for (const set of sets ?? []) {
+      const setImages = (images ?? []).filter(image => image.set_id === set.id);
+      if (set.status === "published") publishedMedia.add(set.node_id);
+      counts[set.node_id] = setImages.length || counts[set.node_id] || 0;
+      if (setImages[0]) {
+        const { data } = await db.storage.from("story-private").createSignedUrl(setImages[0].storage_path, 3600);
+        if (data?.signedUrl) thumbnails[set.node_id] = data.signedUrl;
+      }
+    }
+  }
+  return <><div className="studio-format-banner"><strong>{story.default_format === "web_novel" ? "Web Novel" : "Komik"}</strong>{story.default_format === "web_novel" && <div>{graph.nodes.map(node => <Link key={node.id} href={`/admin/stories/${slug}/prose/${node.id}`}>{node.title} · {publishedMedia.has(node.id) ? "Naskah terbit" : "Tulis naskah"} →</Link>)}</div>}<details className="studio-taxonomy-details"><summary>Genre & tag cerita</summary><form action={updateStoryTaxonomy}><input type="hidden" name="story_id" value={story.id} /><input type="hidden" name="slug" value={story.slug} /><StoryTaxonomyFields genres={story.genres} tags={story.tags} /><SubmitButton pendingLabel="Menyimpan metadata…">Simpan genre & tag</SubmitButton></form></details></div><StoryWorkspace story={{ id: story.id, title: story.title, slug: story.slug, status: story.status, default_format: story.default_format }}
+    initialGraph={graph} initialVersion={draft.version} publicationVersion={draft.publication_version}
+    admin={role === "admin"} thumbnails={thumbnails} panelCounts={counts}
+    publishedNodeIds={(publicNodes ?? []).filter(node => node.status === "published").map(node => node.id)}
+    publishedMediaIds={[...publishedMedia]} /></>;
 }
