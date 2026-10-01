@@ -381,3 +381,56 @@ body:has(.reader-experience) { background:#080f16; }
 .story-card-taxonomy { display:block; margin:8px 12px 0; color:#a7c9f5; font-size:11px; }
 .story-detail-taxonomy { display:flex; flex-wrap:wrap; gap:7px; margin-top:15px; }
 .story-detail-taxonomy a { padding:5px 9px; border:1px solid #8fa9cb; border-radius:999px; color:#e1efff; background:#10243aa8; font-size:12px; text-decoration:none; }
+/* Studio shell: one viewport, with scrolling contained in each working panel. */
+.studio-root .studio-topbar{gap:28px;background:#101923;padding:0 24px;box-shadow:0 1px 0 #ffffff04;position:relative;z-index:10}
+.studio-root .studio-brand{font-size:18px;letter-spacing:-.025em;gap:10px}
+.studio-root .studio-brand>svg{color:#91b7ff;width:20px}
+.studio-root .studio-brand span{font-size:11px;letter-spacing:.08em;text-transform:uppercase;background:#223249;border:1px solid #354966;padding:4px 7px;border-radius:5px;color:#c8daf5}
+.studio-root .studio-top-links{gap:4px}
+.studio-root .studio-top-links a{padding:8px 12px;font-size:13px;border-radius:6px}
+.studio-root .studio-top-links a.is-active{background:#253853;color:#dce9ff}
+.studio-root .studio-site-link{display:flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid #334151;border-radius:6px;font-size:12px}
+body:has(.studio-workspace){overflow:hidden}
+.studio-workspace{min-height:0;height:calc(100dvh - 60px)}
+.studio-sidebar,.studio-center,.studio-inspector{min-height:0}
+.studio-sidebar-settings{margin:0 7px 18px}
+.studio-sidebar-settings .panel{padding:12px;margin:0 0 12px;background:#182432;border:1px solid #304154;border-radius:9px}
+.studio-sidebar-settings h3{font-size:12px;margin:0 0 7px}
+.studio-sidebar-settings p{font-size:11px;line-height:1.5;margin:6px 0;color:#9eafc3}
+.studio-cover-upload{width:100%;border:1px solid #405b7d;background:#253b57;color:#e2edff;border-radius:6px;padding:8px;cursor:pointer}
+.studio-sidebar-settings summary{font-size:12px;cursor:pointer;color:#b9c9db}
+.studio-sidebar-settings .field input,.studio-sidebar-settings .field select{max-width:100%;min-width:0}
+.studio-workspace-toolbar{padding:14px 20px;min-height:76px;flex-shrink:0}
+.studio-workspace-toolbar>div:first-child{min-width:0}
+.studio-workspace-toolbar h1{font-size:19px;line-height:1.35;overflow-wrap:anywhere}
+.studio-workspace-toolbar p{color:#90a6bf;letter-spacing:.1em}
+.studio-toolbar-actions{flex-shrink:0;gap:5px}
+.studio-toolbar-actions>button{background:#1b2a3c;border-color:#334860}
+.studio-save-state{margin-right:8px;font-size:11px}
+.studio-chapter-filter{display:grid;gap:6px;margin:12px 0;font-size:11px;color:#a9bbce}
+.studio-chapter-filter select{width:100%;min-width:0;padding:8px;border:1px solid #3a4d64;border-radius:6px;background:#192737;color:#dce6f3}
+.studio-sidebar-section>button{align-items:flex-start;gap:8px;line-height:1.5;padding:9px 8px}
+.studio-chapter-number{color:#8ca8cd;font-size:11px;min-width:16px;padding-top:1px}
+.studio-sidebar-section .studio-write-chapter{margin-top:10px;background:#253b57;color:#d4e6ff;justify-content:space-between}
+@media(max-width:720px){
+ body:has(.studio-workspace){overflow:auto}
+ .studio-root .studio-topbar{padding:0 12px;gap:12px}
+ .studio-root .studio-brand span{display:none}
+ .studio-root .studio-top-links a{padding:8px;font-size:12px}
+ .studio-root .studio-top-links a span{display:none}
+ .studio-root .studio-site-link{padding:6px;font-size:11px}
+ .studio-workspace{height:auto;min-height:calc(100dvh - 60px)}
+ .studio-sidebar{max-height:none;overflow:visible}
+ .studio-sidebar-settings{margin:0 0 12px}
+ .studio-sidebar-settings .panel{padding:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+ .studio-sidebar-settings .panel h3{margin:0}.studio-sidebar-settings .panel p{display:none}
+ .studio-cover-upload{width:auto;margin-left:auto}
+ .studio-sidebar-section{display:block;margin:12px 0 0}
+ .studio-sidebar-section>button{display:inline-flex;width:auto;max-width:100%}
+ .studio-chapter-filter{margin:8px 0}
+ .studio-workspace-toolbar{flex-wrap:wrap;padding:12px}
+ .studio-toolbar-actions{width:100%;justify-content:flex-start}
+ .studio-save-state{flex-basis:auto;margin-right:auto}
+}
+@media(min-width:721px){.studio-workspace .studio-canvas{min-height:0}.studio-workspace .studio-errors{max-height:180px;overflow:auto;flex-shrink:0}}
+.studio-cover-upload:focus-visible,.studio-chapter-filter select:focus-visible,.studio-root .studio-top-links a:focus-visible{outline:2px solid #91b7ff;outline-offset:3px}

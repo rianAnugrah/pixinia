@@ -14,6 +14,7 @@ import { parseGraph, validatePublication, type StudioChoice, type StudioGraph, t
 
 type Props = {
   story: { id: string; title: string; slug: string; status: string; default_format: string };
+  sidebarContent: React.ReactNode;
   initialGraph: StudioGraph; initialVersion: number; publicationVersion: number; admin: boolean;
   thumbnails: Record<string, string>; panelCounts: Record<string, number>;
   publishedNodeIds: string[]; publishedMediaIds: string[];
@@ -47,7 +48,7 @@ function layoutGraph(graph: StudioGraph): StudioGraph {
   }) };
 }
 
-export default function StoryWorkspace({ story, initialGraph, initialVersion, publicationVersion, admin, thumbnails, panelCounts, publishedNodeIds, publishedMediaIds }: Props) {
+export default function StoryWorkspace({ story, sidebarContent, initialGraph, initialVersion, publicationVersion, admin, thumbnails, panelCounts, publishedNodeIds, publishedMediaIds }: Props) {
   const router = useRouter();
   const [graph, setGraph] = useState<StudioGraph>(() => layoutGraph(parseGraph(initialGraph)));
   const graphRef = useRef(graph);
@@ -232,10 +233,11 @@ export default function StoryWorkspace({ story, initialGraph, initialVersion, pu
 
   return <div className={`studio-workspace ${inspectorTab === "detail" ? "" : "studio-workspace-wide"}`}>
     <aside className="studio-sidebar">
-      <Link href="/admin" className="studio-back"><ArrowLeft size={16} aria-hidden /> Kembali ke Komik</Link>
+      <Link href="/studio" className="studio-back"><ArrowLeft size={16} aria-hidden /> Kembali ke Komik</Link>
       <div className="studio-story-identity"><div className="studio-story-cover"><BookOpen size={32} aria-hidden /></div><div><strong>{story.title}</strong><span className="studio-badge">{story.status === "published" ? "● Terbit" : "● Draft"}</span></div></div>
+      <div className="studio-sidebar-settings">{sidebarContent}</div>
       <nav className="studio-side-nav" aria-label="Bagian cerita">{nav.map(item => <button type="button" key={item.id} className={view === item.id ? "active" : ""} onClick={() => setView(item.id)}><item.icon size={18} aria-hidden />{item.title}</button>)}</nav>
-      <div className="studio-sidebar-section"><div><strong>Episode</strong><button type="button" onClick={addEpisode} aria-label="Tambah episode"><Plus size={18} /></button></div>{graph.episodes.slice().sort((a,b) => a.sortOrder-b.sortOrder).map((item,index) => <button type="button" key={item.id} className={episode === item.id ? "active" : ""} onClick={() => { setEpisode(item.id); setView("graph"); }}>{index + 1}. &nbsp;{item.title}</button>)}<button type="button" className={episode === "all" ? "active" : ""} onClick={() => { setEpisode("all"); setView("graph"); }}>Semua episode</button></div>
+      <div className="studio-sidebar-section"><div><strong>Bab</strong><span>{graph.nodes.length}</span></div><label className="studio-chapter-filter"><span>Episode</span><select aria-label="Filter episode" value={episode} onChange={event => setEpisode(event.target.value)}><option value="all">Semua episode</option>{graph.episodes.slice().sort((a,b) => a.sortOrder-b.sortOrder).map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label>{visibleNodes.map((node,index) => <button type="button" key={node.id} className={selected === node.id ? "active" : ""} onClick={() => { selectNode(node.id); setView("graph"); }}><span className="studio-chapter-number">{index + 1}</span><span>{node.title}</span></button>)}{story.default_format === "web_novel" && selected && <button type="button" className="studio-write-chapter" onClick={() => void openPanels(selected)}>Tulis naskah <ChevronRight size={15} /></button>}</div>
     </aside>
 
     <main className="studio-center">

@@ -20,9 +20,9 @@ export default function CoverUploader({ storyId }: { storyId: string }) {
       if (error) throw error;
       const finalized = await fetch("/api/studio/covers", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "finalize", storyId, path: ticket.path }) });
       const result = await finalized.json(); if (!finalized.ok) throw new Error(result.error);
-      setMessage("Cover tersimpan di Supabase Storage."); router.refresh();
+      setMessage("Cover berhasil diperbarui."); router.refresh();
     } catch (error) { setMessage(error instanceof Error ? error.message : "Upload cover gagal."); }
     finally { setBusy(false); if (input.current) input.current.value = ""; }
   }
-  return <section className="panel" aria-busy={busy}><h3>Cover cerita</h3><p className="muted">Disimpan privat di Supabase Storage. JPEG, PNG, atau WebP hingga 10 MB.</p><input ref={input} type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={event => void upload(event.currentTarget.files?.[0])} />{busy && <p role="status"><BusyStatus>Mengunggah dan memvalidasi cover…</BusyStatus></p>}{message && <p role="status">{message}</p>}</section>;
+  return <section className="panel" aria-busy={busy}><h3>Cover cerita</h3><p className="muted">JPEG, PNG, atau WebP · maks. 10 MB</p><button type="button" className="studio-cover-upload" disabled={busy} onClick={() => input.current?.click()}>{busy ? "Mengunggah…" : "Ganti cover"}</button><input hidden ref={input} type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={event => void upload(event.currentTarget.files?.[0])} />{busy && <p role="status"><BusyStatus>Mengunggah dan memvalidasi cover…</BusyStatus></p>}{message && <p role="status">{message}</p>}</section>;
 }

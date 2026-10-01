@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import { requireStoryAccess } from "@/lib/admin";
 import { assetUrl, type Asset } from "@/lib/data";
 import StoryWorkspace from "@/components/studio/story-workspace";
-import Link from "next/link";
 import type { StudioGraph } from "@/lib/studio/graph";
 import { updateStoryTaxonomy } from "@/app/studio/actions";
 import StoryTaxonomyFields from "@/components/admin/story-taxonomy-fields";
@@ -45,9 +44,10 @@ export default async function AdminStoryPage({ params }: { params: Promise<{ slu
       }
     }
   }
-  return <><div className="studio-format-banner"><strong>{story.default_format === "web_novel" ? "Web Novel" : "Komik"}</strong>{story.default_format === "web_novel" && <div>{graph.nodes.map(node => <Link key={node.id} href={`/studio/stories/${slug}/prose/${node.id}`}>{node.title} · {publishedMedia.has(node.id) ? "Naskah terbit" : "Tulis naskah"} →</Link>)}</div>}<details className="studio-taxonomy-details"><summary>Genre & tag cerita</summary><form action={updateStoryTaxonomy}><input type="hidden" name="story_id" value={story.id} /><input type="hidden" name="slug" value={story.slug} /><StoryTaxonomyFields genres={story.genres} tags={story.tags} /><SubmitButton pendingLabel="Menyimpan metadata…">Simpan genre & tag</SubmitButton></form></details></div><CoverUploader storyId={story.id} /><StoryWorkspace story={{ id: story.id, title: story.title, slug: story.slug, status: story.status, default_format: story.default_format }}
+  return <StoryWorkspace story={{ id: story.id, title: story.title, slug: story.slug, status: story.status, default_format: story.default_format }}
+    sidebarContent={<><CoverUploader storyId={story.id} /><details className="studio-taxonomy-details"><summary>Genre & tag cerita</summary><form action={updateStoryTaxonomy}><input type="hidden" name="story_id" value={story.id} /><input type="hidden" name="slug" value={story.slug} /><StoryTaxonomyFields genres={story.genres} tags={story.tags} /><SubmitButton pendingLabel="Menyimpan…">Simpan genre & tag</SubmitButton></form></details></>}
     initialGraph={graph} initialVersion={draft.version} publicationVersion={draft.publication_version}
     admin={role === "admin"} thumbnails={thumbnails} panelCounts={counts}
     publishedNodeIds={(publicNodes ?? []).filter(node => node.status === "published").map(node => node.id)}
-    publishedMediaIds={[...publishedMedia]} /></>;
+    publishedMediaIds={[...publishedMedia]} />;
 }
