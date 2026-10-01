@@ -8,7 +8,7 @@ import ReaderActions from "@/components/reader-actions";
 import ReaderPanelStack, { type ReaderPanel } from "@/components/reader-panel-stack";
 import ReaderControls from "@/components/reader/reader-controls";
 import CoinAction from "@/components/coin-action";
-import { novelParagraphs } from "@/lib/web-novel";
+import { renderableProseBlocks } from "@/lib/web-novel";
 import ReadTracker from "@/components/reader/read-tracker";
 
 export default async function ReaderPage({ params }: { params: Promise<{ slug: string; nodeKey: string }> }) {
@@ -32,7 +32,7 @@ export default async function ReaderPage({ params }: { params: Promise<{ slug: s
     : Promise.resolve({ data: null, error: null });
   const [content, chapterImages, { data: prose, error: proseError }] = await Promise.all([contentPromise, chapterImagesPromise, prosePromise]);
   if (proseError) throw proseError;
-  const paragraphs = novelParagraphs(prose?.body);
+  const paragraphs = renderableProseBlocks(prose?.body);
   const proseIds = paragraphs.map((_, index) => `${node.id}:paragraph:${index}`);
   const publishedPanels: ReaderPanel[] = chapterImages
     ? chapterImages.map(image => ({ id: image.id, url: image.url, alt: image.alt_text, width: image.width, height: image.height, speaker: image.speaker, dialogue: image.dialogue, caption: image.caption }))
@@ -52,7 +52,7 @@ export default async function ReaderPage({ params }: { params: Promise<{ slug: s
       {allowed ? <>
         <div className="reader-chapter-intro"><p>{node.node_type === "ending" ? "AKHIR CERITA" : story.title}</p><h1>{node.title}</h1>{node.synopsis && <span>{node.synopsis}</span>}</div>
         {story.default_format === "web_novel" ? <article className="web-novel-text" aria-label={`Naskah ${node.title}`}>
-          {paragraphs.length ? paragraphs.map((paragraph, index) => <p key={proseIds[index]} data-reader-panel={proseIds[index]}>{paragraph}</p>) : <p>Naskah bab belum diterbitkan.</p>}
+          {paragraphs.length ? paragraphs.map((paragraph, index) => <p key={proseIds[index]} data-reader-panel={proseIds[index]} dangerouslySetInnerHTML={{ __html: paragraph }} />) : <p>Naskah bab belum diterbitkan.</p>}
         </article> : <ReaderPanelStack panels={publishedPanels} reloadOnImageRetry />}
         <div className="reader-ending" id="akhir-bab">
           {canChoose && choices.length > 0 && cover && <div className="px-choice-scene" style={scene}><p>{story.title}</p><h2>{node.title}</h2>{node.synopsis && <span>{node.synopsis}</span>}</div>}

@@ -4,7 +4,7 @@ import { requireStoryAccess } from "@/lib/admin";
 import { assetUrl, type Asset } from "@/lib/data";
 import type { StudioGraph } from "@/lib/studio/graph";
 import ReaderPanelStack from "@/components/reader-panel-stack";
-import { novelParagraphs } from "@/lib/web-novel";
+import { renderableProseBlocks } from "@/lib/web-novel";
 
 export default async function StudioNodePreview({ params, searchParams }: { params: Promise<{ slug: string; nodeId: string }>; searchParams: Promise<{ embedded?: string }> }) {
   const { slug, nodeId } = await params;
@@ -33,7 +33,7 @@ export default async function StudioNodePreview({ params, searchParams }: { para
     {!embedded && <Link href={`/studio/stories/${slug}`} className="text-link">← Kembali ke Story Graph</Link>}
     <p className="eyebrow">PREVIEW STUDIO · {story.default_format === "web_novel" ? proseDraft ? "NASKAH DRAFT" : "NASKAH TERBIT" : active?.status === "draft" ? "PANEL DRAFT" : "PANEL TERBIT"}</p>
     <h1>{node.title}</h1><p className="reader-description">{node.synopsis}</p>
-    {story.default_format === "web_novel" ? <article className="web-novel-text">{prose ? novelParagraphs(prose).map((paragraph,index) => <p key={index}>{paragraph}</p>) : <p>Belum ada naskah.</p>}</article> : <ReaderPanelStack panels={active ? signedImages.map(image => ({ id: image.id, url: image.url || null, alt: image.alt_text, width: image.width, height: image.height, speaker: image.speaker, dialogue: image.dialogue, caption: image.caption })) : (legacyPanels ?? []).map(panel => { const asset = legacy.data?.find(item => item.id === panel.asset_id); return { id: panel.id, url: asset ? assetUrl(asset as Asset) : null, alt: panel.caption || `Panel ${panel.panel_order}`, speaker: panel.speaker, dialogue: panel.dialogue, caption: panel.caption }; })} />}
+    {story.default_format === "web_novel" ? <article className="web-novel-text">{prose ? renderableProseBlocks(prose).map((paragraph,index) => <p key={index} dangerouslySetInnerHTML={{ __html: paragraph }} />) : <p>Belum ada naskah.</p>}</article> : <ReaderPanelStack panels={active ? signedImages.map(image => ({ id: image.id, url: image.url || null, alt: image.alt_text, width: image.width, height: image.height, speaker: image.speaker, dialogue: image.dialogue, caption: image.caption })) : (legacyPanels ?? []).map(panel => { const asset = legacy.data?.find(item => item.id === panel.asset_id); return { id: panel.id, url: asset ? assetUrl(asset as Asset) : null, alt: panel.caption || `Panel ${panel.panel_order}`, speaker: panel.speaker, dialogue: panel.dialogue, caption: panel.caption }; })} />}
     <section className="choices"><h2>Pilihan berikutnya</h2>{choices.length ? choices.map(choice => <Link key={choice.id} className="choice" href={`/studio/stories/${slug}/preview/${choice.target}`}>{choice.label}<span>→ {graph.nodes.find(item=>item.id===choice.target)?.title ?? "?"}</span></Link>) : <p>Ending · tidak ada pilihan berikutnya.</p>}</section>
   </main>;
 }
