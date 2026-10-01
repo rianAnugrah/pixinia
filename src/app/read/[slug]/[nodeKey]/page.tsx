@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { LockKeyhole, Coins, ShieldCheck, GitBranch } from "lucide-react";
-import { assetUrl, getNode, getNodeContent, getPublishedChapterImages, getStory } from "@/lib/data";
+import { assetUrl, getNode, getNodeContent, getPublishedChapterImages, getStory, storyCoverUrl } from "@/lib/data";
 import { createClient } from "@/lib/supabase/server";
 import { getReaderNavigation } from "@/lib/reader-navigation";
 import ReaderActions from "@/components/reader-actions";
@@ -42,7 +42,9 @@ export default async function ReaderPage({ params }: { params: Promise<{ slug: s
   const activeChapter = chapters.find(chapter => chapter.active);
   const canChoose = !user || progress?.current_node_id === node.id;
   const resetLabel = !progress ? "Mulai dari bab ini · Gratis" : "Pilih jalur dari bab ini · Gratis";
-  return <main className="reader-experience" id="konten-baca">
+  const cover = storyCoverUrl(story.cover_path);
+  const scene = cover ? { backgroundImage: `linear-gradient(180deg,#090a1022,#090a10 100%),url(${JSON.stringify(cover)})` } : undefined;
+  return <main className={`reader-experience${allowed ? "" : " px-locked-reader"}`} id="konten-baca">
     <ReaderControls key={`${user?.id ?? "guest"}:${node.id}`} slug={slug} title={node.title} nodeId={node.id} panelIds={story.default_format === "web_novel" ? proseIds : publishedPanels.map(panel => panel.id)} chapters={chapters} edges={edges} accountKey={user?.id ?? "guest"} balance={access.balance} signedIn={!!user} hasChoices={allowed && choices.length > 0 && canChoose} contentLabel={story.default_format === "web_novel" ? "Paragraf" : "Panel"} />
     <div className="reader-content">
       {allowed ? <>
@@ -51,18 +53,19 @@ export default async function ReaderPage({ params }: { params: Promise<{ slug: s
           {paragraphs.length ? paragraphs.map((paragraph, index) => <p key={proseIds[index]} data-reader-panel={proseIds[index]}>{paragraph}</p>) : <p>Naskah bab belum diterbitkan.</p>}
         </article> : <ReaderPanelStack panels={publishedPanels} reloadOnImageRetry />}
         <div className="reader-ending" id="akhir-bab">
+          {canChoose && choices.length > 0 && cover && <div className="px-choice-scene" style={scene}><p>{story.title}</p><h2>{node.title}</h2>{node.synopsis && <span>{node.synopsis}</span>}</div>}
           {canChoose ? <ReaderActions nodeId={node.id} progressVersion={progress?.updated_at ?? null} storyId={story.id} slug={slug} choices={choices} targets={targets} costs={costs} balance={access.balance} signedIn={!!user} isEnding={node.node_type === "ending"} />
             : <section className="reader-replay"><GitBranch size={28} /><h2>{progress ? "Jelajahi jalur lain" : "Mulai perjalananmu"}</h2><p>Bab ini sudah terbuka. Aktifkan bab ini untuk memilih kelanjutannya. Semua unlock tetap dimiliki.</p><CoinAction key={node.id} rpc="coin_reset_chapter" args={{ p_node_id: node.id }} label={resetLabel} confirmText="Mulai jalur baru dari bab ini? Riwayat jalur aktif akan dimulai ulang. Semua bab yang sudah dibeli tetap terbuka, tanpa biaya." />{activeChapter && <Link href={`/read/${slug}/${activeChapter.nodeKey}`}>Lanjutkan perjalanan: {activeChapter.title} →</Link>}</section>}
           {user && canChoose && <details className="reader-reset-details"><summary>Ulangi pilihan dari bab ini</summary><p>Reset gratis. Riwayat jalur aktif dimulai ulang; pembelian tetap dimiliki.</p><CoinAction rpc="coin_reset_chapter" args={{ p_node_id: node.id }} label="Reset bab · Gratis" confirmText="Ulangi pilihan dari bab ini? Riwayat jalur aktif dimulai ulang. Semua unlock tetap dimiliki." /></details>}
         </div>
-      </> : <section className="reader-unlock-gate">
+      </> : <><div className="px-locked-scene" style={scene}><span><LockKeyhole size={27} /></span></div><section className="reader-unlock-gate">
         <div className="reader-lock-art"><LockKeyhole size={42} /></div><p className="reader-choice-kicker">{node.is_premium || story.is_premium ? "BAB PREMIUM" : "JALUR BARU MENUNGGU"}</p><h1>{node.title}</h1><p>{node.synopsis}</p>
         <div className="reader-unlock-price"><Coins size={24} /><strong>{node.unlock_cost}</strong><span>coin untuk unlock</span></div>
         <CoinAction rpc="coin_unlock_node" args={{ p_node_id: node.id }} label="Unlock & baca bab" cost={node.unlock_cost} balance={access.balance} signedIn={!!user} next={`/read/${slug}/${nodeKey}`} />
         <p className="reader-unlock-assurance"><ShieldCheck size={17} /> Sekali unlock, baca ulang selamanya. Reset gratis.</p>
         {story.is_premium && <div className="reader-premium-offer"><h2>Buka seluruh cerita</h2><p>Semua cabang dalam {story.title}.</p><CoinAction rpc="coin_unlock_story" args={{ p_story_id: story.id }} label="Unlock cerita premium" cost={story.unlock_cost} balance={access.balance} signedIn={!!user} next={`/read/${slug}/${nodeKey}`} /></div>}
         <Link className="reader-back-story" href={`/stories/${slug}`}>← Kembali ke daftar bab</Link>
-      </section>}
+      </section></>}
     </div>
   </main>;
 }

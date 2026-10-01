@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getPublishedPanelCounts, getStory, storyCoverUrl, storyFormatLabel } from "@/lib/data";
+import { getPublishedPanelCounts, getStory, storyFormatLabel } from "@/lib/data";
 import { createClient } from "@/lib/supabase/server";
 import StoryStart from "@/components/story-start";
 import StoryTabs from "@/components/reader/story-tabs";
@@ -9,6 +9,9 @@ import { getCoinAccess } from "@/lib/coins";
 import CoinAction from "@/components/coin-action";
 import { visitedNodeIds } from "@/lib/reader-state";
 import { catalogHref, storyGenreLabel } from "@/lib/story-taxonomy";
+import { Cover, PageHeading, ProgressBar } from "@/components/reader/design-ui";
+import SaveStory from "@/components/reader/saved-stories";
+import { GitBranch } from "lucide-react";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params; const story = await getStory(slug);
@@ -36,14 +39,16 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
   if (edgesError) throw edgesError;
   const chapters = (chapterRows ?? []).sort((a, b) => Number(b.is_start) - Number(a.is_start) || (a.sequence_hint ?? 2147483647) - (b.sequence_hint ?? 2147483647)).map(chapter => ({ id: chapter.id, nodeKey: chapter.node_key, title: chapter.title, isStart: chapter.is_start, current: chapter.id === progress?.current_node_id, panelCount: panelCounts[chapter.id] ?? 0, owned: isOwned(chapter), cost: chapter.unlock_cost, premium: chapter.is_premium, visited: visited.has(chapter.id), ending: chapter.node_type === "ending" }));
   const currentKey = chapters.find(chapter => chapter.current)?.nodeKey;
-  const cover = storyCoverUrl(story.cover_path);
-  return <main className="story-detail">
-    <div className="story-detail-cover" style={cover ? { backgroundImage: `linear-gradient(0deg,#080f16 0%,#080f1640 65%),url(${JSON.stringify(cover)})` } : undefined}>
-      {!cover && <span className="story-cover-mark" aria-hidden>✦</span>}
-      <div className="story-detail-hero"><p>{storyFormatLabel(story.default_format).toUpperCase()} INTERAKTIF PIXINIA</p><h1>{story.title}</h1>{story.tagline && <span>{story.tagline}</span>}{(story.genres.length > 0 || story.tags.length > 0) && <div className="story-detail-taxonomy">{story.genres.map(value => <Link key={value} href={catalogHref({ genre: value })}>{storyGenreLabel(value)}</Link>)}{story.tags.map(value => <Link key={value} href={catalogHref({ tag: value })}>#{value}</Link>)}</div>}</div>
-    </div>
-    <div className="story-detail-body"><div className="story-detail-actions">{user && <p>Saldo: <strong>{access.balance} coin</strong></p>}{progress?.current_node_id && !currentKey ? <p role="alert">Bab terakhir belum tersedia. Progresmu tetap tersimpan.</p> : start ? <StoryStart storyId={story.id} slug={slug} startKey={start.node_key} currentKey={currentKey} signedIn={!!user} cost={isOwned(start) ? 0 : start.unlock_cost} balance={access.balance} /> : <p>Awal cerita belum tersedia.</p>}{story.is_premium && !access.storyOwned && !access.staff && <CoinAction rpc="coin_unlock_story" args={{ p_story_id: story.id }} label="Unlock seluruh cerita premium" cost={story.unlock_cost} balance={access.balance} signedIn={!!user} next={`/stories/${slug}`} />}</div>
-      <StoryTabs slug={slug} description={story.description || story.tagline} chapters={chapters} edges={edges ?? []} format={story.default_format} />
+  const discovered = chapters.filter(chapter => chapter.visited).length;
+  const endings = chapters.filter(chapter => chapter.ending);
+  return <main className="px-page px-story-detail">
+    <PageHeading title="Detail cerita" back="/explore" />
+    <div className="px-content"><section className="px-detail-card"><Cover path={story.cover_path} title={story.title} /><div><h1>{story.title}</h1><p className="px-muted">{storyFormatLabel(story.default_format)} · Pixinia</p><div className="px-detail-stats"><span><strong>{chapters.length}</strong><small>Bab</small></span><span><strong>{endings.length}</strong><small>Kemungkinan akhir</small></span></div><div className="px-chips">{story.genres.map(value => <Link key={value} href={catalogHref({ genre: value })}>{storyGenreLabel(value)}</Link>)}</div></div></section>
+    <section className="px-synopsis"><h2>Sinopsis</h2><p>{story.description || story.tagline || "Kisah baru menantimu."}</p>{story.tags.length > 0 && <div className="px-chips">{story.tags.map(value => <Link key={value} href={catalogHref({ tag: value })}>#{value}</Link>)}</div>}</section>
+    <div className="px-detail-actions">{progress?.current_node_id && !currentKey ? <p role="alert">Bab terakhir belum tersedia. Progresmu tetap tersimpan.</p> : start ? <StoryStart storyId={story.id} slug={slug} startKey={start.node_key} currentKey={currentKey} signedIn={!!user} cost={isOwned(start) ? 0 : start.unlock_cost} balance={access.balance} /> : <p>Awal cerita belum tersedia.</p>}<SaveStory storyId={story.id} accountKey={user?.id ?? "guest"} /></div>
+    {story.is_premium && !access.storyOwned && !access.staff && <CoinAction rpc="coin_unlock_story" args={{ p_story_id: story.id }} label="Unlock seluruh cerita premium" cost={story.unlock_cost} balance={access.balance} signedIn={!!user} next={`/stories/${slug}`} />}
+    <section className="px-detail-journey"><div className="px-section-heading"><h2>Perjalananmu</h2><span>{progress ? "SEDANG BERJALAN" : "BELUM DIMULAI"}</span></div><div className="px-progress-labels"><span>{discovered} / {chapters.length} bab dijelajahi</span><span>{endings.filter(chapter => chapter.visited).length} / {endings.length} akhir</span></div><ProgressBar value={chapters.length ? discovered / chapters.length * 100 : 0} label="Perjalanan cerita" /><Link className="px-secondary" href={`/stories/${slug}/map`}><GitBranch size={18} />Lihat peta cerita</Link></section>
+    <StoryTabs slug={slug} description={story.description || story.tagline} chapters={chapters} edges={edges ?? []} format={story.default_format} />
     </div>
   </main>;
 }

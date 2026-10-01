@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { BookOpen, House, UserRound } from "lucide-react";
+import ReaderNavigation from "@/components/reader/navigation";
 
 export default async function Navbar() {
   const db = await createClient();
@@ -10,5 +10,5 @@ export default async function Navbar() {
     <Link href="/" className="brand"><span className="brand-mark">✦</span> Pixinia</Link>
     <div className="nav-links"><Link href="/">Cerita</Link>{user && <Link href="/library">Pustaka saya</Link>}{user && <Link href="/admin">Studio</Link>}</div>
     <Link className="nav-action" href={user ? "/account" : "/login"}>{user ? `${wallet?.balance ?? 0} coin · Akun` : "Masuk"}</Link>
-  </nav></header><nav className="reader-mobile-nav" aria-label="Navigasi mobile"><Link href="/"><House size={20} aria-hidden />Beranda</Link><Link href={user ? "/library" : "/login?next=/library"}><BookOpen size={20} aria-hidden />Pustaka</Link><Link href={user ? "/account" : "/login"}><UserRound size={20} aria-hidden />Akun</Link></nav></>;
+  </nav></header><ReaderNavigation /></>;
 }

@@ -8,6 +8,7 @@ import { visibleChapterSections } from "@/lib/reader-chapters";
 import type { ReaderMapNode, ReaderMapEdge } from "@/lib/reader-map";
 import ReaderDialog from "./reader-dialog";
 import BranchMap from "./branch-map";
+import ReaderSettings from "./settings";
 
 export default function ReaderControls({ slug, title, nodeId, panelIds, chapters, edges, accountKey, balance, signedIn, hasChoices, contentLabel = "Panel" }: {
   slug: string; title: string; nodeId: string; panelIds: string[]; chapters: ReaderMapNode[]; edges: ReaderMapEdge[]; accountKey: string; balance: number; signedIn: boolean; hasChoices: boolean; contentLabel?: string;
@@ -15,7 +16,6 @@ export default function ReaderControls({ slug, title, nodeId, panelIds, chapters
   const [active, setActive] = useState(0);
   const [open, setOpen] = useState<"chapters" | "wallet" | "settings" | null>(null);
   const [tab, setTab] = useState<"map" | "list">("list");
-  const [largeText, setLargeText] = useState(false);
   const restoredKey = useRef("");
   const storageKey = `pixinia:panel:${accountKey}:${slug}:${nodeId}`;
   const goTo = useCallback((index: number, behavior: ScrollBehavior = "smooth") => {
@@ -46,11 +46,6 @@ export default function ReaderControls({ slug, title, nodeId, panelIds, chapters
     document.addEventListener("load", update, true);
     return () => { cancelAnimationFrame(frame); window.removeEventListener("scroll", update); window.removeEventListener("resize", update); document.removeEventListener("load", update, true); };
   }, [goTo, panelIds, storageKey]);
-  useEffect(() => {
-    const reader = document.getElementById("konten-baca");
-    reader?.classList.toggle("reader-large-text", largeText);
-    return () => reader?.classList.remove("reader-large-text");
-  }, [largeText]);
   function showChapters() {
     setTab("list"); setOpen("chapters");
   }
@@ -82,6 +77,6 @@ export default function ReaderControls({ slug, title, nodeId, panelIds, chapters
       <Link href={`/stories/${slug}`} className="reader-sheet-detail">Detail cerita →</Link>
     </ReaderDialog>}
     {open === "wallet" && <ReaderDialog title="Coin kamu" onClose={() => setOpen(null)}><div className="reader-wallet-summary"><Coins size={34} /><strong>{signedIn ? balance : "100"}</strong><span>{signedIn ? "coin tersedia" : "coin awal untuk setiap akun"}</span></div><p>Coin dipakai untuk unlock bab, komik premium, dan reward. Harga ditampilkan sebelum kamu mengonfirmasi.</p><p>Membaca ulang dan reset bab gratis. Untuk tambahan coin, hubungi admin.</p><Link className="reader-primary" href={signedIn ? "/account" : `/login?next=${encodeURIComponent(`/read/${slug}/${chapters.find(c => c.id === nodeId)?.nodeKey}`)}`}><Wallet size={18} />{signedIn ? "Wallet & riwayat transaksi" : "Masuk ke akun"}</Link></ReaderDialog>}
-    {open === "settings" && <ReaderDialog title="Pengaturan baca" onClose={() => setOpen(null)}><label className="reader-setting"><span>{contentLabel === "Paragraf" ? "Teks novel lebih besar" : "Teks dialog lebih besar"}</span><input type="checkbox" checked={largeText} onChange={e => setLargeText(e.target.checked)} /></label><p>Geser halaman untuk membaca. Gunakan slider untuk pindah {contentLabel.toLowerCase()} dan tombol Bab untuk melihat cabang lain.</p><button className="reader-secondary" onClick={() => { goTo(0); setOpen(null); }}>Kembali ke {contentLabel.toLowerCase()} pertama</button></ReaderDialog>}
+    {open === "settings" && <ReaderDialog title="Pengaturan baca" onClose={() => setOpen(null)}><ReaderSettings /><button className="reader-secondary" onClick={() => { goTo(0); setOpen(null); }}>Kembali ke {contentLabel.toLowerCase()} pertama</button></ReaderDialog>}
   </>;
 }

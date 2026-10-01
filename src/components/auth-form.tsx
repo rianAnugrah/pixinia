@@ -4,6 +4,7 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/browser";
+import { authRedirectUrl } from "@/lib/auth-redirect";
 import BusyStatus from "@/components/busy-status";
 
 type Mode = "login" | "signup" | "forgot" | "reset";
@@ -17,10 +18,10 @@ export default function AuthForm({ mode, next = "/library" }: { mode: Mode; next
       const result = await db.auth.signInWithPassword({ email, password });
       if (result.error) setError(result.error.message); else { navigating = true; router.replace(next.startsWith("/") && !next.startsWith("//") ? next : "/library"); router.refresh(); }
     } else if (mode === "signup") {
-      const result = await db.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}/auth/callback` } });
+      const result = await db.auth.signUp({ email, password, options: { emailRedirectTo: authRedirectUrl("/auth/callback", window.location.origin) } });
       if (result.error) setError(result.error.message); else setMessage("Periksa email untuk mengonfirmasi akun.");
     } else if (mode === "forgot") {
-      const result = await db.auth.resetPasswordForEmail(email, { redirectTo: `${window.location.origin}/auth/callback?next=/reset-password` });
+      const result = await db.auth.resetPasswordForEmail(email, { redirectTo: authRedirectUrl("/auth/callback?next=/reset-password", window.location.origin) });
       if (result.error) setError(result.error.message); else setMessage("Jika alamat terdaftar, tautan pemulihan telah dikirim.");
     } else {
       const result = await db.auth.updateUser({ password });

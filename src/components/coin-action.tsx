@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { Coins, ShieldCheck } from "lucide-react";
+import { Coins, ShieldCheck, Unlock, BookOpen, GitBranch, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/browser";
 import CoinConfirmPopover from "@/components/reader/coin-confirm-popover";
@@ -20,6 +20,7 @@ function CoinTransaction({ rpc, args, label, cost = 0, balance, signedIn = true,
   const [busy, setBusy] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [message, setMessage] = useState("");
+  const [unlocked, setUnlocked] = useState(false);
   const insufficient = signedIn && balance !== undefined && balance < cost;
   function begin() {
     if (inFlight.current) return;
@@ -38,6 +39,7 @@ function CoinTransaction({ rpc, args, label, cost = 0, balance, signedIn = true,
       const { error } = await createClient().rpc(rpc, rpcArgs).abortSignal(AbortSignal.timeout(15000));
       if (error) throw error;
       request.current = null; setConfirm(false);
+      if (rpc === "coin_unlock_node" && next) { setUnlocked(true); return; }
       if (next && (typeof window === "undefined" || next !== window.location.pathname)) { router.push(next); return; }
       setMessage("Berhasil."); router.refresh();
     } catch (cause) {
@@ -45,6 +47,7 @@ function CoinTransaction({ rpc, args, label, cost = 0, balance, signedIn = true,
       setMessage(text.includes("Coin tidak cukup") ? "Coin tidak cukup. Buka wallet untuk mengecek saldo terbaru." : "Belum mendapat konfirmasi transaksi. Coba lagi; transaksi yang sama tidak akan ditagih dua kali.");
     } finally { inFlight.current = false; setBusy(false); }
   }
+  if (unlocked && next) return <section className="px-unlock-success" aria-label="Jalur berhasil dibuka"><div className="px-unlock-art" aria-hidden><Unlock size={28} /></div><p className="px-kicker px-gold">JALUR BARU</p><h2>Jalur cerita terbuka</h2><p role="status">Bab ini sekarang menjadi bagian dari perjalananmu. Baca ulang kapan saja tanpa biaya.</p><div className="px-unlock-discovery"><Sparkles size={23} /><div><strong>Satu kemungkinan baru</strong><small>Unlock berhasil · Akses permanen</small></div></div><button className="px-button" onClick={() => { router.push(next); router.refresh(); }}><BookOpen size={18} />Lanjutkan cerita</button><Link className="px-secondary" href={`/stories/${next.split("/")[2]}/map`}><GitBranch size={18} />Lihat peta cerita</Link></section>;
   return <div className="coin-action"><button className="primary-button" onClick={begin} disabled={busy} aria-busy={busy}>{busy ? "Memproses…" : `${label}${cost > 0 ? ` · ${cost} coin` : ""}`}</button>
     {!confirm && message && <p role="status">{message}</p>}
     {confirm && <CoinConfirmPopover title={insufficient ? "Coin belum cukup" : "Buka jalur ini?"} onClose={() => setConfirm(false)} busy={busy}>
