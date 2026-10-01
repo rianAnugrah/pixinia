@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
+import { getStoryMetrics, type StoryMetrics } from "@/lib/story-engagement";
 
-export type Story = { id: string; slug: string; title: string; tagline: string | null; description: string | null; cover_path: string | null; default_format: string; unlock_cost: number; is_premium: boolean; genres: string[]; tags: string[]; };
+export type Story = { id: string; slug: string; title: string; tagline: string | null; description: string | null; cover_path: string | null; default_format: string; unlock_cost: number; is_premium: boolean; genres: string[]; tags: string[]; metrics?: StoryMetrics; };
 export const storyFormatLabel = (format: string) => format === "web_novel" ? "Web Novel" : format === "motion_comic" ? "Motion Comic" : format === "video" ? "Video" : "Komik";
 export type Node = { id: string; story_id: string; node_key: string; title: string; synopsis: string | null; node_type: string; is_start: boolean; status: string; unlock_cost: number; is_premium: boolean; };
 export type Choice = { id: string; node_id: string; next_node_id: string; label: string; description: string | null; sort_order: number; };
@@ -11,14 +12,17 @@ export async function getStories(): Promise<Story[]> {
   const db = await createClient();
   const { data, error } = await db.from("stories").select("id,slug,title,tagline,description,cover_path,default_format,unlock_cost,is_premium,genres,tags").eq("status", "published").eq("visibility", "public").order("published_at", { ascending: false });
   if (error) throw error;
-  return data ?? [];
+  const metrics = new Map((await getStoryMetrics(db, (data ?? []).map(s => s.id))).map(m => [m.story_id, m]));
+  return (data ?? []).map(s => ({ ...s, metrics: metrics.get(s.id) }));
 }
 
 export async function getStory(slug: string): Promise<Story | null> {
   const db = await createClient();
   const { data, error } = await db.from("stories").select("id,slug,title,tagline,description,cover_path,default_format,unlock_cost,is_premium,genres,tags").eq("slug", slug).eq("status", "published").maybeSingle();
   if (error) throw error;
-  return data;
+  if (!data) return null;
+  const metrics = await getStoryMetrics(db, [data.id]);
+  return { ...data, metrics: metrics[0] };
 }
 
 export async function getNode(storyId: string, nodeKey: string): Promise<Node | null> {

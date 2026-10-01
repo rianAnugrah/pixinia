@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { missingFeatureFunction } from "@/lib/story-engagement";
 
 export async function getCoinAccess(userId: string | undefined, storyId: string) {
   const db = await createClient();
@@ -7,10 +8,11 @@ export async function getCoinAccess(userId: string | undefined, storyId: string)
     db.from("coin_wallets").select("balance").eq("user_id", userId).single(),
     db.from("coin_node_unlocks").select("node_id").eq("user_id", userId),
     db.from("coin_story_unlocks").select("story_id").eq("user_id", userId).eq("story_id", storyId).maybeSingle(),
-    db.from("profiles").select("role").eq("id", userId).single(),
+    db.rpc("studio_can_manage_story", { p_story_id: storyId }),
   ]);
-  for (const result of [wallet, nodes, story, profile]) if (result.error) throw result.error;
-  return { balance: Number(wallet.data?.balance ?? 0), storyOwned: !!story.data, owned: new Set<string>((nodes.data ?? []).map(n => n.node_id)), staff: ["admin", "editor"].includes(profile.data?.role) };
+  for (const result of [wallet, nodes, story]) if (result.error) throw result.error;
+  if (profile.error && !missingFeatureFunction(profile.error, "studio_can_manage_story")) throw profile.error;
+  return { balance: Number(wallet.data?.balance ?? 0), storyOwned: !!story.data, owned: new Set<string>((nodes.data ?? []).map(n => n.node_id)), staff: profile.data === true };
 }
 
 export function coinError(cause: unknown): string {

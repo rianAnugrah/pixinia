@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
 import type { Story } from "@/lib/data";
 import { storyCoverUrl, storyFormatLabel } from "@/lib/story-media";
 import { storyGenreLabel } from "@/lib/story-taxonomy";
+import { ratingLabel } from "@/lib/story-engagement";
 
 export function PageHeading({ title, back, children }: { title: string; back?: string; children?: React.ReactNode }) {
   return <header className={`px-heading ${back ? "px-heading-back" : ""}`}>{back && <Link href={back} className="px-icon-button" aria-label="Kembali"><ChevronLeft size={20} /></Link>}<h1>{title}</h1>{children || (back && <span className="px-heading-spacer" />)}</header>;
@@ -13,7 +14,7 @@ export function Cover({ path, title, className = "" }: { path: string | null; ti
   return <span className={`px-cover ${className}`}>{url ? <Image src={url} alt={`Sampul ${title}`} fill sizes="(max-width: 600px) 160px, 240px" unoptimized /> : <BookOpen size={28} aria-hidden />}</span>;
 }
 export function StoryCard({ story }: { story: Story }) {
-  return <Link className="px-story-card" href={`/stories/${story.slug}`}><Cover path={story.cover_path} title={story.title} /><strong>{story.title}</strong><small>{story.genres.map(storyGenreLabel).slice(0, 2).join(" · ") || storyFormatLabel(story.default_format)}</small></Link>;
+  return <Link className="px-story-card" href={`/stories/${story.slug}`}><Cover path={story.cover_path} title={story.title} /><strong>{story.title}</strong><small>{story.metrics?.author_name ?? "Pixinia Editorial"}</small><small>{story.genres.map(storyGenreLabel).slice(0, 2).join(" · ") || storyFormatLabel(story.default_format)}</small><small>{ratingLabel(story.metrics?.rating_average, story.metrics?.rating_count)}</small></Link>;
 }
 export function SectionHeading({ title, href, action = "Lihat semua" }: { title: string; href?: string; action?: string }) {
   return <div className="px-section-heading"><h2>{title}</h2>{href && <Link href={href}>{action}</Link>}</div>;

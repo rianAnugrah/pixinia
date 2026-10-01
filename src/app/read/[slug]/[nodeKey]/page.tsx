@@ -9,6 +9,7 @@ import ReaderPanelStack, { type ReaderPanel } from "@/components/reader-panel-st
 import ReaderControls from "@/components/reader/reader-controls";
 import CoinAction from "@/components/coin-action";
 import { novelParagraphs } from "@/lib/web-novel";
+import ReadTracker from "@/components/reader/read-tracker";
 
 export default async function ReaderPage({ params }: { params: Promise<{ slug: string; nodeKey: string }> }) {
   const { slug, nodeKey } = await params;
@@ -45,6 +46,7 @@ export default async function ReaderPage({ params }: { params: Promise<{ slug: s
   const cover = storyCoverUrl(story.cover_path);
   const scene = cover ? { backgroundImage: `linear-gradient(180deg,#090a1022,#090a10 100%),url(${JSON.stringify(cover)})` } : undefined;
   return <main className={`reader-experience${allowed ? "" : " px-locked-reader"}`} id="konten-baca">
+    {story.metrics && user && allowed && (paragraphs.length > 0 || publishedPanels.length > 0) && <ReadTracker key={node.id} nodeId={node.id} />}
     <ReaderControls key={`${user?.id ?? "guest"}:${node.id}`} slug={slug} title={node.title} nodeId={node.id} panelIds={story.default_format === "web_novel" ? proseIds : publishedPanels.map(panel => panel.id)} chapters={chapters} edges={edges} accountKey={user?.id ?? "guest"} balance={access.balance} signedIn={!!user} hasChoices={allowed && choices.length > 0 && canChoose} contentLabel={story.default_format === "web_novel" ? "Paragraf" : "Panel"} />
     <div className="reader-content">
       {allowed ? <>

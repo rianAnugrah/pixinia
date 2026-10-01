@@ -14,14 +14,16 @@ async function handlePost(request: NextRequest) {
   const db = await createClient();
   const { data: { user } } = await db.auth.getUser();
   if (!user) return NextResponse.json({ error: "Sesi berakhir. Masuk kembali." }, { status: 401 });
-  const { data: profile } = await db.from("profiles").select("role").eq("id", user.id).maybeSingle();
-  if (!profile || !["admin", "editor"].includes(profile.role)) return NextResponse.json({ error: "Akses Studio ditolak." }, { status: 403 });
+  const { data: profile } = await db.from("profiles").select("role,is_active").eq("id", user.id).maybeSingle();
+  if (!profile?.is_active || !["admin", "creator"].includes(profile.role)) return NextResponse.json({ error: "Akses Studio ditolak." }, { status: 403 });
   const raw = await request.text();
   if (raw.length > 350_000) return NextResponse.json({ error: "Graph terlalu besar." }, { status: 413 });
   let body: { action?: string; storyId?: string; version?: number; graph?: unknown; mutationId?: string };
   try { body = JSON.parse(raw); } catch { return NextResponse.json({ error: "Data tidak valid." }, { status: 400 }); }
   if (!body.storyId || typeof body.version !== "number" || !Number.isSafeInteger(body.version) || body.version < 1 || !body.mutationId || !/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(body.mutationId))
     return NextResponse.json({ error: "Versi graph tidak valid." }, { status: 400 });
+  const { data: canManage, error: accessError } = await db.rpc("studio_can_manage_story", { p_story_id: body.storyId });
+  if (accessError || !canManage) return NextResponse.json({ error: "Akses cerita ditolak." }, { status: 403 });
   if (body.action === "save") {
     let graph;
     try { graph = parseGraph(body.graph); } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Graph tidak valid." }, { status: 422 }); }

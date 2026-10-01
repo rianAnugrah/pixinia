@@ -8,11 +8,13 @@ async function context(request: NextRequest, body?: { storyId?: string; nodeId?:
   const db = await createClient();
   const { data: { user } } = await db.auth.getUser();
   if (!user) return { error: NextResponse.json({ error: "Masuk dahulu." }, { status: 401 }) };
-  const { data: profile } = await db.from("profiles").select("role").eq("id", user.id).single();
-  if (!profile || !["admin", "editor"].includes(profile.role)) return { error: NextResponse.json({ error: "Akses ditolak." }, { status: 403 }) };
+  const { data: profile } = await db.from("profiles").select("role,is_active").eq("id", user.id).single();
+  if (!profile?.is_active || !["admin", "creator"].includes(profile.role)) return { error: NextResponse.json({ error: "Akses ditolak." }, { status: 403 }) };
   const storyId = body?.storyId ?? request.nextUrl.searchParams.get("storyId");
   const nodeId = body?.nodeId ?? request.nextUrl.searchParams.get("nodeId");
   if (!storyId || !nodeId) return { error: NextResponse.json({ error: "Story dan node diperlukan." }, { status: 400 }) };
+  const { data: canManage, error: accessError } = await db.rpc("studio_can_manage_story", { p_story_id: storyId });
+  if (accessError || !canManage) return { error: NextResponse.json({ error: "Akses cerita ditolak." }, { status: 403 }) };
   const { data: draft } = await db.from("studio_graph_drafts").select("graph").eq("story_id", storyId).maybeSingle();
   if (!(draft?.graph as StudioGraph | undefined)?.nodes.some(node => node.id === nodeId)) return { error: NextResponse.json({ error: "Node tidak ditemukan." }, { status: 404 }) };
   return { db, nodeId, admin: profile.role === "admin" };

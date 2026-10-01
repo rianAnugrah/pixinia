@@ -10,8 +10,8 @@ async function context() {
   const db = await createClient();
   const { data: { user } } = await db.auth.getUser();
   if (!user) return null;
-  const { data: profile } = await db.from("profiles").select("role").eq("id", user.id).single();
-  if (!profile || !["admin", "editor"].includes(profile.role)) return null;
+  const { data: profile } = await db.from("profiles").select("role,is_active").eq("id", user.id).single();
+  if (!profile?.is_active || !["admin", "creator"].includes(profile.role)) return null;
   return { db, user };
 }
 

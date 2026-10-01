@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Search, SlidersHorizontal, ChevronRight } from "lucide-react";
 import type { Story } from "@/lib/data";
 import { storyGenreLabel } from "@/lib/story-taxonomy";
+import { ratingLabel } from "@/lib/story-engagement";
 import { Cover, PageHeading, StoryCard, SectionHeading } from "./design-ui";
 export default function Explore({ stories, initial }: { stories: Story[]; initial: { genre?: string; format?: string; tag?: string } }) {
   const [query, setQuery] = useState("");
@@ -21,7 +22,7 @@ export default function Explore({ stories, initial }: { stories: Story[]; initia
     <div className="px-chips" aria-label="Genre"><button aria-pressed={!genre} onClick={() => setGenre("")}>Semua</button>{genres.map(value => <button key={value} aria-pressed={genre === value} onClick={() => setGenre(value)}>{storyGenreLabel(value)}</button>)}</div>
     {filters && <div className="px-filter-panel"><label>Format<select value={format} onChange={event => setFormat(event.target.value)}><option value="">Semua format</option><option value="web_novel">Web Novel</option><option value="comic">Komik</option></select></label><label>Tag<select value={tag} onChange={event => setTag(event.target.value)}><option value="">Semua tag</option>{tags.map(value => <option key={value}>{value}</option>)}</select></label></div>}
     <SectionHeading title={query || genre || format || tag ? `${visible.length} cerita ditemukan` : "Temukan kisah baru"} /><div className="px-story-rail">{visible.slice(0, 6).map(story => <StoryCard key={story.id} story={story} />)}</div>
-    <div className="px-explore-list">{visible.map(story => <Link href={`/stories/${story.slug}`} key={story.id}><Cover path={story.cover_path} title={story.title} /><span><small>{story.genres.map(storyGenreLabel).join(" · ") || "CERITA INTERAKTIF"}</small><strong>{story.title}</strong></span><ChevronRight size={16} /></Link>)}</div>
+    <div className="px-explore-list">{visible.map(story => <Link href={`/stories/${story.slug}`} key={story.id}><Cover path={story.cover_path} title={story.title} /><span><small>{story.genres.map(storyGenreLabel).join(" · ") || "CERITA INTERAKTIF"}</small><strong>{story.title}</strong><small>{story.metrics?.author_name ?? "Pixinia Editorial"} · {ratingLabel(story.metrics?.rating_average, story.metrics?.rating_count)}</small></span><ChevronRight size={16} /></Link>)}</div>
     {!visible.length && <div className="empty-state"><h2>Belum ada cerita yang cocok</h2><p>Coba kata kunci atau genre lain.</p><button className="px-button" onClick={() => { setQuery(""); setGenre(""); setFormat(""); setTag(""); }}>Hapus filter</button></div>}
   </div></main>;
 }

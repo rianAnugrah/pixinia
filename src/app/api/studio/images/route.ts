@@ -11,8 +11,8 @@ export async function POST(request: NextRequest) {
   const db = await createClient();
   const { data: { user } } = await db.auth.getUser();
   if (!user) return NextResponse.json({ error: "Masuk dahulu" }, { status: 401 });
-  const { data: profile } = await db.from("profiles").select("role").eq("id", user.id).single();
-  if (!profile || !["admin", "editor"].includes(profile.role))
+  const { data: profile } = await db.from("profiles").select("role,is_active").eq("id", user.id).single();
+  if (!profile?.is_active || !["admin", "creator"].includes(profile.role))
     return NextResponse.json({ error: "Akses ditolak" }, { status: 403 });
 
   let body: Record<string, unknown>;

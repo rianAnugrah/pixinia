@@ -12,6 +12,8 @@ import { catalogHref, storyGenreLabel } from "@/lib/story-taxonomy";
 import { Cover, PageHeading, ProgressBar } from "@/components/reader/design-ui";
 import SaveStory from "@/components/reader/saved-stories";
 import { GitBranch } from "lucide-react";
+import StoryRating from "@/components/reader/story-rating";
+import { ratingLabel } from "@/lib/story-engagement";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params; const story = await getStory(slug);
@@ -41,9 +43,15 @@ export default async function StoryPage({ params }: { params: Promise<{ slug: st
   const currentKey = chapters.find(chapter => chapter.current)?.nodeKey;
   const discovered = chapters.filter(chapter => chapter.visited).length;
   const endings = chapters.filter(chapter => chapter.ending);
+  const [rating, reads] = user && story.metrics ? await Promise.all([
+    db.from("story_ratings").select("score").eq("story_id", story.id).eq("user_id", user.id).maybeSingle(),
+    db.from("story_read_sessions").select("id").eq("story_id", story.id).eq("user_id", user.id).not("counted_at", "is", null).limit(1),
+  ]) : [{ data: null, error: null }, { data: [], error: null }];
+  if (rating.error) throw rating.error; if (reads.error) throw reads.error;
   return <main className="px-page px-story-detail">
     <PageHeading title="Detail cerita" back="/explore" />
-    <div className="px-content"><section className="px-detail-card"><Cover path={story.cover_path} title={story.title} /><div><h1>{story.title}</h1><p className="px-muted">{storyFormatLabel(story.default_format)} · Pixinia</p><div className="px-detail-stats"><span><strong>{chapters.length}</strong><small>Bab</small></span><span><strong>{endings.length}</strong><small>Kemungkinan akhir</small></span></div><div className="px-chips">{story.genres.map(value => <Link key={value} href={catalogHref({ genre: value })}>{storyGenreLabel(value)}</Link>)}</div></div></section>
+    <div className="px-content"><section className="px-detail-card"><Cover path={story.cover_path} title={story.title} /><div><h1>{story.title}</h1><p className="px-muted">{storyFormatLabel(story.default_format)} · {story.metrics?.author_name ?? "Pixinia Editorial"}</p><p className="story-rating-summary">★ {ratingLabel(story.metrics?.rating_average, story.metrics?.rating_count)}</p><div className="px-detail-stats"><span><strong>{chapters.length}</strong><small>Bab</small></span><span><strong>{endings.length}</strong><small>Kemungkinan akhir</small></span><span><strong>{(story.metrics?.read_count ?? 0).toLocaleString("id-ID")}</strong><small>Kali dibaca</small></span><span><strong>{(story.metrics?.reader_count ?? 0).toLocaleString("id-ID")}</strong><small>Pembaca unik</small></span></div><div className="px-chips">{story.genres.map(value => <Link key={value} href={catalogHref({ genre: value })}>{storyGenreLabel(value)}</Link>)}</div></div></section>
+    {story.metrics && <section className="px-synopsis"><h2>Rating pembaca</h2><StoryRating key={`${user?.id ?? "guest"}:${story.id}`} storyId={story.id} slug={slug} score={rating.data?.score ?? null} signedIn={!!user} eligible={!!reads.data?.length} ownStory={!!user && story.metrics?.author_id === user.id} /></section>}
     <section className="px-synopsis"><h2>Sinopsis</h2><p>{story.description || story.tagline || "Kisah baru menantimu."}</p>{story.tags.length > 0 && <div className="px-chips">{story.tags.map(value => <Link key={value} href={catalogHref({ tag: value })}>#{value}</Link>)}</div>}</section>
     <div className="px-detail-actions">{progress?.current_node_id && !currentKey ? <p role="alert">Bab terakhir belum tersedia. Progresmu tetap tersimpan.</p> : start ? <StoryStart storyId={story.id} slug={slug} startKey={start.node_key} currentKey={currentKey} signedIn={!!user} cost={isOwned(start) ? 0 : start.unlock_cost} balance={access.balance} /> : <p>Awal cerita belum tersedia.</p>}<SaveStory storyId={story.id} accountKey={user?.id ?? "guest"} /></div>
     {story.is_premium && !access.storyOwned && !access.staff && <CoinAction rpc="coin_unlock_story" args={{ p_story_id: story.id }} label="Unlock seluruh cerita premium" cost={story.unlock_cost} balance={access.balance} signedIn={!!user} next={`/stories/${slug}`} />}

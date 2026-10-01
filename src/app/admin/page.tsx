@@ -1,10 +1,19 @@
 import Link from "next/link";
-import { requireStaff } from "@/lib/admin";
-import { createStory } from "./actions";
-import SubmitButton from "@/components/submit-button";
-import StoryTaxonomyFields from "@/components/admin/story-taxonomy-fields";
+import { requireAdmin } from "@/lib/admin";
+import { readAnalytics } from "@/lib/story-engagement";
 
 export default async function AdminPage() {
-  const { db, role } = await requireStaff(); const { data: stories } = await db.from("stories").select("id,slug,title,status,default_format").order("created_at", { ascending:false });
-  return <main className="shell page"><div className="page-intro"><p className="eyebrow">STUDIO PIXINIA</p><h1 className="page-title">Kelola cerita</h1><p>Rancang graph, tulis bab, dan siapkan media untuk ditinjau.</p>{role === "admin" && <Link className="text-link" href="/admin/coins">Kelola coin, harga & reward →</Link>}</div><div className="admin-grid"><section className="panel"><h2>Cerita</h2>{stories?.length ? stories.map(s => <p key={s.id}><Link className="text-link" href={`/admin/stories/${s.slug}`}>{s.title} →</Link> <span className="pill">{s.default_format === "web_novel" ? "Web Novel" : "Komik"} · {s.status}</span></p>) : <p className="muted">Belum ada cerita.</p>}</section><form action={createStory} className="panel"><h2>Cerita baru</h2><label className="field"><span>Format cerita</span><select name="default_format" defaultValue="comic"><option value="comic">Komik</option><option value="web_novel">Web Novel</option></select></label><label className="field"><span>Judul</span><input name="title" required maxLength={200} /></label><label className="field"><span>Slug URL</span><input name="slug" required pattern="[a-z0-9]+(-[a-z0-9]+)*" /></label><label className="field"><span>Sinopsis</span><textarea name="description" rows={4} /></label><StoryTaxonomyFields /><SubmitButton pendingLabel="Membuat cerita…">Buat cerita</SubmitButton></form></div></main>;
+  const { db } = await requireAdmin();
+  const data = await readAnalytics(db, 30);
+  return <main className="shell page"><div className="page-intro"><p className="eyebrow">ADMIN PIXINIA</p>
+    <h1 className="page-title">Dashboard platform</h1><p>Aktivitas membaca 30 hari terakhir dan pengelolaan platform.</p></div>
+    <div className="admin-stat-grid">
+      <div className="panel"><small>Total user</small><strong>{data.users?.total ?? 0}</strong><span>{data.users?.new ?? 0} baru dalam 30 hari</span></div>
+      <div className="panel"><small>Cerita</small><strong>{data.stories}</strong><span>Komik dan novel</span></div>
+      <div className="panel"><small>Kali dibaca</small><strong>{data.reads}</strong><span>Sesi membaca valid</span></div>
+      <div className="panel"><small>Pembaca unik</small><strong>{data.readers}</strong><span>Akun berbeda di platform</span></div>
+    </div><div className="admin-grid">
+      <section className="panel"><h2>User menurut role</h2><p>Reader: {data.users?.reader ?? 0}</p><p>Creator: {data.users?.creator ?? 0}</p><p>Admin: {data.users?.admin ?? 0}</p><Link className="text-link" href="/admin/users">Kelola user →</Link></section>
+      <section className="panel"><h2>Pengelolaan</h2><p><Link className="text-link" href="/admin/stories">Kelola cerita dan author →</Link></p><p><Link className="text-link" href="/admin/coins">Tambah coin ke user →</Link></p><p><Link className="text-link" href="/admin/analytics">Lihat analytics →</Link></p></section>
+    </div></main>;
 }

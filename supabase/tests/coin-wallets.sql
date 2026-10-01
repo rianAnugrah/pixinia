@@ -74,11 +74,12 @@ do $$ declare req uuid:=gen_random_uuid(); begin
  assert (select count(*)=8 from public.story_assets),'whole comic visible';
 end $$;
 reset role;
-update public.profiles set role='editor' where id=(select other_user from coin_test_context);
+select set_config('request.jwt.claim.sub','',true);
+update public.profiles set role='creator' where id=(select other_user from coin_test_context);
 select set_config('request.jwt.claim.sub',(select other_user::text from coin_test_context),true);
 set local role authenticated;
 do $$ begin
- begin perform public.admin_grant_coins(auth.uid(),10,'Editor credit',gen_random_uuid()); raise exception 'editor credit allowed'; exception when insufficient_privilege then null; end;
+ begin perform public.admin_grant_coins(auth.uid(),10,'Creator credit',gen_random_uuid()); raise exception 'creator credit allowed'; exception when insufficient_privilege then null; end;
 end $$;
 reset role;
 select set_config('request.jwt.claim.sub','',true);
