@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
+import { ChevronLeft, ChevronRight, BookOpen, Star, ArrowUpRight } from "lucide-react";
 import type { Story } from "@/lib/data";
 import { storyCoverUrl, storyFormatLabel } from "@/lib/story-media";
 import { storyGenreLabel } from "@/lib/story-taxonomy";
@@ -14,7 +14,7 @@ export function Cover({ path, title, className = "" }: { path: string | null; ti
   return <span className={`px-cover ${className}`}>{url ? <Image src={url} alt={`Sampul ${title}`} fill sizes="(max-width: 600px) 160px, 240px" unoptimized /> : <BookOpen size={28} aria-hidden />}</span>;
 }
 export function StoryCard({ story }: { story: Story }) {
-  return <Link className="px-story-card" href={`/stories/${story.slug}`}><Cover path={story.cover_path} title={story.title} /><strong>{story.title}</strong><small>{story.metrics?.author_name ?? "Pixinia Editorial"}</small><small>{story.genres.map(storyGenreLabel).slice(0, 2).join(" · ") || storyFormatLabel(story.default_format)}</small><small>{ratingLabel(story.metrics?.rating_average, story.metrics?.rating_count)}</small></Link>;
+  return <Link className="px-story-card" href={`/stories/${story.slug}`}><span className="story-card-art"><Cover path={story.cover_path} title={story.title} /><span className="story-card-format">{storyFormatLabel(story.default_format)}</span><span className="story-card-open"><ArrowUpRight size={20} aria-hidden /></span></span><span className="story-card-genres">{story.genres.map(storyGenreLabel).slice(0, 2).join(" / ") || "Cerita interaktif"}</span><strong>{story.title}</strong><small>{story.metrics?.author_name ?? "Pixinia Editorial"}</small><small className="story-card-rating"><Star size={12} aria-hidden />{ratingLabel(story.metrics?.rating_average, story.metrics?.rating_count)}</small></Link>;
 }
 export function SectionHeading({ title, href, action = "Lihat semua" }: { title: string; href?: string; action?: string }) {
   return <div className="px-section-heading"><h2>{title}</h2>{href && <Link href={href}>{action}</Link>}</div>;

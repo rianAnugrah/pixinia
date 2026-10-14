@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Navbar from "@/components/ui/navbar";
 import "./globals.css";
 import "./reader-design.css";
+import "./product-design.css";
 import { Inter, Lora } from "next/font/google";
 import ReaderPreferencesProvider from "@/components/reader/preferences";
 import { getReaderDashboard } from "@/lib/reader-dashboard";

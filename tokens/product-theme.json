@@ -1,0 +1,174 @@
+{
+  "primitive": {
+    "ink": {
+      "$type": "color",
+      "$value": "#121513"
+    },
+    "surface": {
+      "$type": "color",
+      "$value": "#1a1e1b"
+    },
+    "raised": {
+      "$type": "color",
+      "$value": "#242a25"
+    },
+    "border": {
+      "$type": "color",
+      "$value": "#343c35"
+    },
+    "strong": {
+      "$type": "color",
+      "$value": "#718072"
+    },
+    "paper": {
+      "$type": "color",
+      "$value": "#f2eee5"
+    },
+    "muted": {
+      "$type": "color",
+      "$value": "#b1b8ac"
+    },
+    "quiet": {
+      "$type": "color",
+      "$value": "#899485"
+    },
+    "amber": {
+      "$type": "color",
+      "$value": "#edc48c"
+    },
+    "amberHover": {
+      "$type": "color",
+      "$value": "#f6d8ac"
+    },
+    "amberSoft": {
+      "$type": "color",
+      "$value": "#302c23"
+    },
+    "onAmber": {
+      "$type": "color",
+      "$value": "#242018"
+    },
+    "success": {
+      "$type": "color",
+      "$value": "#9ccea8"
+    },
+    "successSoft": {
+      "$type": "color",
+      "$value": "#23372b"
+    },
+    "danger": {
+      "$type": "color",
+      "$value": "#f2a6a0"
+    },
+    "dangerSoft": {
+      "$type": "color",
+      "$value": "#422d2d"
+    },
+    "overlay": {
+      "$type": "color",
+      "$value": "#090c0bcc"
+    },
+    "readingPaper": {
+      "$type": "color",
+      "$value": "#e8e0d2"
+    },
+    "readingInk": {
+      "$type": "color",
+      "$value": "#342c24"
+    },
+    "readingNight": {
+      "$type": "color",
+      "$value": "#171a28"
+    },
+    "readingNightText": {
+      "$type": "color",
+      "$value": "#d7dced"
+    }
+  },
+  "semantic": {
+    "bg": {
+      "$type": "color",
+      "$value": "{primitive.ink}"
+    },
+    "surface": {
+      "$type": "color",
+      "$value": "{primitive.surface}"
+    },
+    "surface-raised": {
+      "$type": "color",
+      "$value": "{primitive.raised}"
+    },
+    "line": {
+      "$type": "color",
+      "$value": "{primitive.border}"
+    },
+    "border-strong": {
+      "$type": "color",
+      "$value": "{primitive.strong}"
+    },
+    "text": {
+      "$type": "color",
+      "$value": "{primitive.paper}"
+    },
+    "muted": {
+      "$type": "color",
+      "$value": "{primitive.muted}"
+    },
+    "quiet": {
+      "$type": "color",
+      "$value": "{primitive.quiet}"
+    },
+    "accent": {
+      "$type": "color",
+      "$value": "{primitive.amber}"
+    },
+    "accent-hover": {
+      "$type": "color",
+      "$value": "{primitive.amberHover}"
+    },
+    "accent-soft": {
+      "$type": "color",
+      "$value": "{primitive.amberSoft}"
+    },
+    "on-accent": {
+      "$type": "color",
+      "$value": "{primitive.onAmber}"
+    },
+    "success": {
+      "$type": "color",
+      "$value": "{primitive.success}"
+    },
+    "success-soft": {
+      "$type": "color",
+      "$value": "{primitive.successSoft}"
+    },
+    "danger": {
+      "$type": "color",
+      "$value": "{primitive.danger}"
+    },
+    "danger-soft": {
+      "$type": "color",
+      "$value": "{primitive.dangerSoft}"
+    },
+    "scrim": {
+      "$type": "color",
+      "$value": "{primitive.overlay}"
+    },
+    "reading-paper-bg": {
+      "$type": "color",
+      "$value": "{primitive.readingPaper}"
+    },
+    "reading-paper-text": {
+      "$type": "color",
+      "$value": "{primitive.readingInk}"
+    },
+    "reading-night-bg": {
+      "$type": "color",
+      "$value": "{primitive.readingNight}"
+    },
+    "reading-night-text": {
+      "$type": "color",
+      "$value": "{primitive.readingNightText}"
+    }
+  }
+}
