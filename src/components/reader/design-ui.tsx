@@ -6,8 +6,8 @@ import { storyCoverUrl, storyFormatLabel } from "@/lib/story-media";
 import { storyGenreLabel } from "@/lib/story-taxonomy";
 import { ratingLabel } from "@/lib/story-engagement";
 
-export function PageHeading({ title, back, children }: { title: string; back?: string; children?: React.ReactNode }) {
-  return <header className={`px-heading ${back ? "px-heading-back" : ""}`}>{back && <Link href={back} className="px-icon-button" aria-label="Kembali"><ChevronLeft size={20} /></Link>}<h1>{title}</h1>{children || (back && <span className="px-heading-spacer" />)}</header>;
+export function PageHeading({ title, back, children, headingAs: Heading = "h1" }: { title: string; back?: string; children?: React.ReactNode; headingAs?: "h1" | "p" }) {
+  return <header className={`px-heading ${back ? "px-heading-back" : ""}`}>{back && <Link href={back} className="px-icon-button" aria-label="Kembali"><ChevronLeft size={20} /></Link>}<Heading className="px-heading-title">{title}</Heading>{children || (back && <span className="px-heading-spacer" />)}</header>;
 }
 export function Cover({ path, title, className = "" }: { path: string | null; title: string; className?: string }) {
   const url = storyCoverUrl(path);

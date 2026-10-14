@@ -396,3 +396,17 @@ button,a { -webkit-tap-highlight-color:transparent; }
  .studio-overview>div>svg {display:block;}
  .studio-overview>a {display:flex;}
 }
+.px-heading-back .px-heading-title {font:500 var(--text-sm)/1.4 var(--font-ui);margin:0;}
+.px-detail-card {align-items:flex-start;}
+.px-detail-card .px-cover {width:32%;height:auto;min-height:0;aspect-ratio:2/3;}
+.px-detail-card h1 {font-size:1.625rem;}
+.px-detail-stats {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3);margin-block:var(--space-4);}
+.px-detail-actions {margin:var(--space-4) 0 var(--space-6);}
+.px-detail-actions>.primary-button,.px-detail-actions>.coin-action {min-width:0;}
+@media(min-width:768px) {
+ .px-detail-card .px-cover {width:32%;min-height:0;}
+ .px-detail-card h1 {font-size:2.75rem;}
+ .px-detail-stats {grid-template-columns:repeat(4,minmax(0,1fr));}
+}
+.studio-root .studio-sidebar {max-height:16rem;overflow:auto;overscroll-behavior:contain;}
+@media(min-width:768px) { .studio-root .studio-sidebar {max-height:none;} }
